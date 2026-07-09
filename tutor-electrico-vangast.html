@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a0e16">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VanGast">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>Tutor Eléctrico VanGast</title>
+<style>
+/* Fuentes vía CDN con degradación automática a tipografías del sistema si no hay internet */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root{
+  --bg:#0a0e16;
+  --bg-grid: #0d1220;
+  --card:#131b28;
+  --card2:#182236;
+  --border:#25324a;
+  --text:#e8edf5;
+  --muted:#8b97ac;
+  --v:#ff5c6c;
+  --i:#3ddc84;
+  --r:#ffab4d;
+  --p:#5b9dff;
+  --accent:#22d3ee;
+  --warn:#fbbf24;
+  --danger:#f87171;
+  --ok:#3ddc84;
+  --radius:14px;
+  --shadow: 0 10px 30px -10px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:
+    linear-gradient(180deg, rgba(34,211,238,.05), transparent 200px),
+    repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(255,255,255,.02) 28px),
+    repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(255,255,255,.02) 28px),
+    var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+}
+.device{
+  width:100%;
+  max-width:460px;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  overflow-x:hidden;
+}
+h1,h2,h3{font-family:'Sora','Segoe UI',system-ui,-apple-system,Roboto,sans-serif;}
+.mono{font-family:'JetBrains Mono','Cascadia Code','Consolas',monospace;}
+button{font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;}
+
+/* ---------- SPLASH ---------- */
+#splash{
+  position:fixed; inset:0; z-index:50;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background: radial-gradient(600px 400px at 50% 20%, rgba(34,211,238,.12), transparent), var(--bg);
+  text-align:center; gap:6px; padding:24px;
+  transition: opacity .5s ease, visibility .5s ease;
+}
+#splash.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+.bolt{
+  font-size:52px; line-height:1;
+  filter: drop-shadow(0 0 18px rgba(34,211,238,.6));
+  animation: pulse 2.2s ease-in-out infinite;
+}
+@keyframes pulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+#splash .brand{ font-size:26px; font-weight:800; margin-top:10px; letter-spacing:.5px;}
+#splash .tagline{ color:var(--accent); font-weight:600; font-size:13px; margin:14px 0 26px; letter-spacing:1px; text-transform:uppercase;}
+#splash .ver{ color:var(--muted); font-size:12px; margin-bottom:30px;}
+.btn-start{
+  background:linear-gradient(135deg, var(--accent), #6366f1);
+  color:#031018; border:none; font-weight:800; font-size:15px;
+  padding:14px 38px; border-radius:999px; cursor:pointer; letter-spacing:.5px;
+  box-shadow: 0 8px 24px -6px rgba(34,211,238,.5);
+}
+.btn-start:active{ transform: translateY(1px); }
+
+/* ---------- HEADER ---------- */
+header.top{
+  padding:16px 18px 12px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  position:sticky; top:0; background:rgba(10,14,22,.9); backdrop-filter: blur(8px); z-index:10;
+}
+header.top .id{ display:flex; align-items:center; gap:10px; }
+header.top .id .ic{ font-size:20px; }
+header.top h1{ font-size:16px; font-weight:700; }
+header.top .lvl-pill{
+  font-size:10.5px; font-weight:700; color:var(--accent);
+  border:1px solid rgba(34,211,238,.4); background:rgba(34,211,238,.08);
+  padding:4px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.4px;
+}
+
+main{ flex:1; padding:16px 16px 90px; }
+.view{ display:none; animation: fadeIn .35s ease; }
+.view.active{ display:block; }
+@keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+  box-shadow:var(--shadow);
+  margin-bottom:14px;
+}
+.section-title{ font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); font-weight:700; margin-bottom:10px;}
+
+/* ---------- NAV ---------- */
+nav.bottom{
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:460px;
+  background:rgba(19,27,40,.95); backdrop-filter: blur(10px);
+  border-top:1px solid var(--border);
+  display:flex; z-index:20;
+  padding-bottom: env(safe-area-inset-bottom, 6px);
+}
+nav.bottom button{
+  flex:1; background:none; border:none; color:var(--muted);
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding:10px 2px 8px; cursor:pointer; font-size:10.5px; font-weight:600;
+}
+nav.bottom button .ic{ font-size:19px; }
+nav.bottom button.active{ color:var(--accent); }
+nav.bottom button.active .ic{ transform:translateY(-1px); filter: drop-shadow(0 0 8px rgba(34,211,238,.6)); }
+
+/* ---------- CALCULAR ---------- */
+.picker{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.pick{
+  border:2px solid var(--border); border-radius:12px; padding:12px;
+  display:flex; align-items:center; gap:9px; cursor:pointer; background:var(--card2);
+  transition: all .2s;
+}
+.pick input{ display:none; }
+.pick .dot{ width:16px; height:16px; border-radius:5px; border:2px solid var(--muted); flex-shrink:0; transition:all .2s;}
+.pick span.label{ font-weight:700; font-size:14px; }
+.pick small{ display:block; color:var(--muted); font-size:10.5px; font-weight:500; }
+.pick.sel-V{ border-color:var(--v); background:rgba(255,92,108,.08); }
+.pick.sel-V .dot{ background:var(--v); border-color:var(--v); }
+.pick.sel-I{ border-color:var(--i); background:rgba(61,220,132,.08); }
+.pick.sel-I .dot{ background:var(--i); border-color:var(--i); }
+.pick.sel-R{ border-color:var(--r); background:rgba(255,171,77,.08); }
+.pick.sel-R .dot{ background:var(--r); border-color:var(--r); }
+.pick.sel-P{ border-color:var(--p); background:rgba(91,157,255,.08); }
+.pick.sel-P .dot{ background:var(--p); border-color:var(--p); }
+.pick.disabled{ opacity:.35; pointer-events:none; }
+
+.fields{ margin-top:14px; display:grid; gap:12px; }
+.field{ position:relative; }
+.field label{ display:block; font-weight:700; font-size:12px; margin-bottom:6px; }
+.field input{
+  width:100%; padding:12px 46px 12px 14px; background:var(--bg-grid);
+  border:2px solid var(--border); color:var(--text); border-radius:10px; font-size:16px; font-weight:600;
+  font-family:'JetBrains Mono',monospace;
+}
+.field input:focus{ outline:none; border-color:var(--accent); }
+.field .unit{ position:absolute; right:12px; top:38px; color:var(--muted); font-weight:700; font-size:12px;}
+
+.controls{ display:flex; gap:10px; margin-top:16px; }
+.btn{ flex:1; padding:12px; border:none; border-radius:10px; font-weight:700; font-size:13.5px; cursor:pointer; }
+.btn-ghost{ background:var(--card2); color:var(--text); border:1px solid var(--border); }
+.btn-primary{ background:var(--accent); color:#031018; }
+
+/* wire signature animation */
+.wire-box{ margin:16px 0 6px; }
+.wire-box svg{ width:100%; height:46px; display:block; }
+.wire-path{ fill:none; stroke-width:3; stroke-linecap:round; stroke-dasharray:8 8; animation:flow 1s linear infinite; }
+@keyframes flow{ to{ stroke-dashoffset:-32; } }
+
+#analyzing{ text-align:center; color:var(--accent); font-weight:700; font-size:13px; padding:14px 0; display:none; }
+#analyzing.show{ display:block; }
+
+.result-block{ border-left:4px solid var(--muted); background:rgba(255,255,255,.03); border-radius:10px; padding:14px; margin-bottom:12px; }
+.result-block h3{ font-size:13px; margin-bottom:6px; }
+.proc-line{ font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--muted); margin:3px 0; }
+.proc-answer{ font-size:19px; font-weight:800; margin:8px 0 4px; }
+.proc-answer .alt{ font-size:12.5px; color:var(--accent); font-weight:700; margin-left:6px; }
+.didactic{ font-size:12.5px; color:var(--muted); border-top:1px dashed var(--border); margin-top:10px; padding-top:9px; line-height:1.5; }
+.didactic b{ color:var(--text); }
+
+.timeline{ display:flex; flex-direction:column; gap:0; margin-top:6px;}
+.tl-item{ display:flex; gap:10px; }
+.tl-marker{ display:flex; flex-direction:column; align-items:center; }
+.tl-num{ width:26px; height:26px; border-radius:50%; background:var(--accent); color:#031018; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+.tl-line{ width:2px; flex:1; background:var(--border); margin:2px 0; }
+.tl-body{ padding-bottom:18px; flex:1; }
+.tl-title{ font-weight:700; font-size:13px; margin-bottom:3px; }
+.tl-text{ font-size:12.5px; color:var(--muted); }
+
+/* toasts */
+#toast{
+  position:fixed; top:16px; left:50%; transform:translateX(-50%);
+  background:var(--danger); color:#fff; padding:10px 20px; border-radius:10px;
+  font-weight:700; font-size:13px; opacity:0; pointer-events:none; transition:opacity .3s;
+  z-index:100; max-width:90%; text-align:center; box-shadow:var(--shadow);
+}
+#toast.show{ opacity:1; }
+
+/* ---------- APRENDER ---------- */
+.lesson{ display:flex; gap:12px; align-items:flex-start; }
+.lesson .swatch{ width:38px; height:38px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:800; font-family:'JetBrains Mono',monospace; font-size:15px;}
+.lesson-head{ display:flex; justify-content:space-between; align-items:center; gap:8px;}
+.lesson h3{ font-size:14.5px; }
+.lesson .time{ font-size:10.5px; color:var(--muted); font-weight:700; white-space:nowrap;}
+.lesson p{ font-size:12.5px; color:var(--muted); margin-top:6px; line-height:1.55; }
+.lesson-check{ display:flex; align-items:center; gap:6px; margin-top:10px; font-size:11.5px; color:var(--accent); font-weight:700; cursor:pointer; }
+.lesson-check input{ accent-color: var(--accent); width:14px; height:14px; }
+
+.triangles{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:6px; }
+.tri-wrap{ text-align:center; }
+.tri-wrap svg{ width:100%; max-width:150px; cursor:pointer; }
+.tri-area{ transition:.2s; }
+.tri-area:hover{ opacity:.85; }
+.tri-txt{ font-family:'Sora',sans-serif; font-size:20px; font-weight:800; fill:#08121c; }
+.tri-wrap p{ margin-top:6px; font-size:11.5px; color:var(--muted); font-weight:600;}
+#tri-info{ margin-top:14px; padding:12px; border-radius:10px; background:var(--card2); border-left:4px solid var(--accent); display:none; font-size:12.5px; line-height:1.5;}
+
+/* ---------- BIBLIOTECA ---------- */
+.lib-cat{ margin-bottom:8px; }
+.lib-cat summary{ cursor:pointer; font-weight:700; font-size:13.5px; padding:12px 0; list-style:none; display:flex; justify-content:space-between; align-items:center;}
+.lib-cat summary::-webkit-details-marker{ display:none; }
+.lib-cat summary::after{ content:'+'; color:var(--accent); font-size:18px; font-weight:800; }
+.lib-cat[open] summary::after{ content:'–'; }
+.lib-cat .body{ padding-bottom:12px; font-size:12.5px; color:var(--muted); line-height:1.6; }
+table.tbl{ width:100%; border-collapse:collapse; font-size:12px; margin-top:6px;}
+table.tbl th,table.tbl td{ border-bottom:1px solid var(--border); padding:7px 4px; text-align:left; }
+table.tbl th{ color:var(--muted); text-transform:uppercase; font-size:10px; letter-spacing:.4px;}
+.formula-chip{ display:inline-block; font-family:'JetBrains Mono',monospace; background:var(--bg-grid); border:1px solid var(--border); padding:6px 10px; border-radius:8px; margin:4px 6px 4px 0; font-size:12.5px; font-weight:700;}
+.sym-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:8px; text-align:center;}
+.sym-grid .s{ background:var(--bg-grid); border:1px solid var(--border); border-radius:10px; padding:10px 4px;}
+.sym-grid svg{ width:34px; height:34px; }
+.sym-grid small{ display:block; margin-top:5px; font-size:10px; color:var(--muted); font-weight:600;}
+
+/* ---------- HISTORIAL ---------- */
+.hist-item{ background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:10px; }
+.hist-top{ display:flex; justify-content:space-between; font-size:11px; color:var(--muted); font-weight:700; margin-bottom:6px;}
+.hist-eq{ font-family:'JetBrains Mono',monospace; font-size:13px; margin-bottom:8px; }
+.hist-actions{ display:flex; gap:8px; }
+.hist-actions button{ flex:1; padding:7px; border-radius:8px; border:none; background:var(--bg-grid); color:var(--text); font-size:11px; font-weight:700; cursor:pointer; border:1px solid var(--border);}
+.empty{ text-align:center; color:var(--muted); font-size:13px; padding:30px 10px; }
+
+/* ---------- AJUSTES ---------- */
+.lvl-opt{ display:flex; align-items:center; gap:10px; padding:12px; border:2px solid var(--border); border-radius:10px; margin-bottom:10px; cursor:pointer; background:var(--card2);}
+.lvl-opt.active{ border-color:var(--accent); background:rgba(34,211,238,.08); }
+.lvl-opt input{ accent-color:var(--accent); width:16px; height:16px; }
+.lvl-opt div b{ display:block; font-size:13px; }
+.lvl-opt div small{ color:var(--muted); font-size:11px; }
+.stepper{ display:flex; align-items:center; gap:14px; }
+.stepper button{ width:34px; height:34px; border-radius:8px; border:1px solid var(--border); background:var(--card2); color:var(--text); font-weight:800; font-size:16px; cursor:pointer;}
+.progress-track{ height:10px; background:var(--bg-grid); border-radius:999px; overflow:hidden; margin-top:8px; border:1px solid var(--border);}
+.progress-fill{ height:100%; background:linear-gradient(90deg, var(--accent), #6366f1); transition:width .4s ease; }
+.row-between{ display:flex; justify-content:space-between; align-items:center; }
+</style>
+</head>
+<body>
+<div class="device">
+
+  <!-- SPLASH -->
+  <div id="splash">
+    <div class="bolt">⚡</div>
+    <div class="brand">VanGast · Tutor Eléctrico</div>
+    <div class="tagline">Aprende · Calcula · Comprende</div>
+    <div class="ver mono">v1.0.0-beta · Build 002</div>
+    <button class="btn-start" onclick="startApp()">COMENZAR</button>
+  </div>
+
+  <header class="top">
+    <div class="id"><span class="ic">⚡</span><h1>Tutor Eléctrico</h1></div>
+    <span class="lvl-pill" id="lvlPill">INTERMEDIO</span>
+  </header>
+
+  <main>
+
+    <!-- CALCULAR -->
+    <section class="view active" id="view-calcular">
+      <div id="toast"></div>
+      <div class="card">
+        <div class="section-title">¿Qué datos conoces? Elige 2</div>
+        <div class="picker" id="picker"></div>
+
+        <div class="fields" id="fields"></div>
+
+        <div class="controls">
+          <button class="btn btn-ghost" onclick="clearAll(true)">🗑️ Limpiar</button>
+          <button class="btn btn-ghost" onclick="copyResult()">📋 Copiar</button>
+        </div>
+      </div>
+
+      <div id="analyzing" class="mono">Analizando datos…</div>
+
+      <div class="card" id="wireCard" style="display:none;">
+        <div class="wire-box">
+          <svg viewBox="0 0 300 46" preserveAspectRatio="none">
+            <path id="wirePath" class="wire-path" d="M10,23 L290,23" />
+          </svg>
+        </div>
+      </div>
+
+      <div id="resultsCard" style="display:none;">
+        <div class="card">
+          <div class="section-title">Procedimiento</div>
+          <div class="timeline" id="timeline"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- APRENDER -->
+    <section class="view" id="view-aprender">
+      <div class="card">
+        <div class="row-between">
+          <div class="section-title" style="margin-bottom:2px;">Tu progreso</div>
+          <span class="mono" id="progressLabel" style="font-size:12px; color:var(--accent); font-weight:700;">0%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Lecciones rápidas</div>
+        <div id="lessons"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Triángulos mnemotécnicos</div>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Toca una sección para ver qué significa.</p>
+        <div class="triangles">
+          <div class="tri-wrap">
+            <svg viewBox="0 0 100 87"><polygon points="50,0 100,87 0,87" fill="#182236" stroke="#25324a" stroke-width="2"/>
+              <polygon points="50,0 75,43.5 25,43.5" fill="var(--v)" class="tri-area" onclick="showTri('V')"/>
+              <text x="50" y="32" class="tri-txt" text-anchor="middle">V</text>
+              <polygon points="25,43.5 50,87 0,87" fill="var(--i)" class="tri-area" onclick="showTri('I')"/>
+              <text x="25" y="75" class="tri-txt" text-anchor="middle">I</text>
+              <polygon points="75,43.5 100,87 50,87" fill="var(--r)" class="tri-area" onclick="showTri('R')"/>
+              <text x="75" y="75" class="tri-txt" text-anchor="middle">R</text>
+              <line x1="25" y1="43.5" x2="75" y2="43.5" stroke="#0a0e16" stroke-width="2"/>
+              <line x1="50" y1="43.5" x2="50" y2="87" stroke="#0a0e16" stroke-width="2"/>
+            </svg>
+            <p>Ley de Ohm</p>
+          </div>
+          <div class="tri-wrap">
+            <svg viewBox="0 0 100 87"><polygon points="50,0 100,87 0,87" fill="#182236" stroke="#25324a" stroke-width="2"/>
+              <polygon points="50,0 75,43.5 25,43.5" fill="var(--p)" class="tri-area" onclick="showTri('P')"/>
+              <text x="50" y="32" class="tri-txt" text-anchor="middle">P</text>
+              <polygon points="25,43.5 50,87 0,87" fill="var(--v)" class="tri-area" onclick="showTri('V')"/>
+              <text x="25" y="75" class="tri-txt" text-anchor="middle">V</text>
+              <polygon points="75,43.5 100,87 50,87" fill="var(--i)" class="tri-area" onclick="showTri('I')"/>
+              <text x="75" y="75" class="tri-txt" text-anchor="middle">I</text>
+              <line x1="25" y1="43.5" x2="75" y2="43.5" stroke="#0a0e16" stroke-width="2"/>
+              <line x1="50" y1="43.5" x2="50" y2="87" stroke="#0a0e16" stroke-width="2"/>
+            </svg>
+            <p>Ley de Watt</p>
+          </div>
+        </div>
+        <div id="tri-info"></div>
+      </div>
+    </section>
+
+    <!-- BIBLIOTECA -->
+    <section class="view" id="view-biblioteca">
+      <div class="card">
+        <details class="lib-cat" open>
+          <summary>⚡ Ley de Ohm</summary>
+          <div class="body">
+            La tensión aplicada a un conductor es proporcional a la corriente que circula por él, siendo la resistencia la constante de proporcionalidad.
+            <div style="margin-top:8px;">
+              <span class="formula-chip">V = I × R</span>
+              <span class="formula-chip">I = V / R</span>
+              <span class="formula-chip">R = V / I</span>
+            </div>
+          </div>
+        </details>
+        <details class="lib-cat">
+          <summary>🔆 Ley de Watt (Potencia)</summary>
+          <div class="body">
+            La potencia eléctrica mide la energía que un circuito consume o entrega por unidad de tiempo.
+            <div style="margin-top:8px;">
+              <span class="formula-chip">P = V × I</span>
+              <span class="formula-chip">P = I² × R</span>
+              <span class="formula-chip">P = V² / R</span>
+            </div>
+          </div>
+        </details>
+        <details class="lib-cat">
+          <summary>📏 Unidades</summary>
+          <div class="body">
+            <table class="tbl">
+              <tr><th>Magnitud</th><th>Símbolo</th><th>Unidad</th></tr>
+              <tr><td>Voltaje</td><td>V</td><td>Voltio (V)</td></tr>
+              <tr><td>Corriente</td><td>I</td><td>Amperio (A)</td></tr>
+              <tr><td>Resistencia</td><td>R</td><td>Ohmio (Ω)</td></tr>
+              <tr><td>Potencia</td><td>P</td><td>Vatio (W)</td></tr>
+            </table>
+          </div>
+        </details>
+        <details class="lib-cat">
+          <summary>🔁 Conversión de prefijos</summary>
+          <div class="body">
+            <table class="tbl">
+              <tr><th>Prefijo</th><th>Símbolo</th><th>Factor</th></tr>
+              <tr><td>Mega</td><td>M</td><td>× 1 000 000</td></tr>
+              <tr><td>Kilo</td><td>k</td><td>× 1 000</td></tr>
+              <tr><td>Base</td><td>—</td><td>× 1</td></tr>
+              <tr><td>Mili</td><td>m</td><td>÷ 1 000</td></tr>
+              <tr><td>Micro</td><td>µ</td><td>÷ 1 000 000</td></tr>
+            </table>
+          </div>
+        </details>
+        <details class="lib-cat">
+          <summary>🧰 Instrumentos</summary>
+          <div class="body">
+            <b style="color:var(--text)">Multímetro:</b> mide voltaje, corriente y resistencia en un solo equipo.<br><br>
+            <b style="color:var(--text)">Voltímetro:</b> se conecta en paralelo para medir diferencia de potencial.<br><br>
+            <b style="color:var(--text)">Amperímetro:</b> se conecta en serie para medir el flujo de corriente.<br><br>
+            <b style="color:var(--text)">Óhmetro:</b> mide resistencia con el circuito sin energizar.
+          </div>
+        </details>
+        <details class="lib-cat">
+          <summary>🔣 Símbolos eléctricos</summary>
+          <div class="body">
+            <div class="sym-grid">
+              <div class="s"><svg viewBox="0 0 40 20"><path d="M2,10 h6 l3,-7 l5,14 l5,-14 l5,14 l3,-7 h6" fill="none" stroke="#e8edf5" stroke-width="2"/></svg><small>Resistor</small></div>
+              <div class="s"><svg viewBox="0 0 40 30"><line x1="8" y1="4" x2="8" y2="26" stroke="#e8edf5" stroke-width="3"/><line x1="16" y1="10" x2="16" y2="20" stroke="#e8edf5" stroke-width="2"/><line x1="0" y1="15" x2="8" y2="15" stroke="#e8edf5" stroke-width="2"/><line x1="16" y1="15" x2="30" y2="15" stroke="#e8edf5" stroke-width="2"/></svg><small>Batería</small></div>
+              <div class="s"><svg viewBox="0 0 40 20"><circle cx="20" cy="10" r="9" fill="none" stroke="#e8edf5" stroke-width="2"/><line x1="14" y1="14" x2="26" y2="6" stroke="#e8edf5" stroke-width="2"/></svg><small>Interruptor</small></div>
+              <div class="s"><svg viewBox="0 0 40 20"><circle cx="20" cy="10" r="8" fill="none" stroke="#e8edf5" stroke-width="2"/><text x="20" y="14" text-anchor="middle" font-size="10" fill="#e8edf5">A</text></svg><small>Amperímetro</small></div>
+              <div class="s"><svg viewBox="0 0 40 20"><circle cx="20" cy="10" r="8" fill="none" stroke="#e8edf5" stroke-width="2"/><text x="20" y="14" text-anchor="middle" font-size="10" fill="#e8edf5">V</text></svg><small>Voltímetro</small></div>
+              <div class="s"><svg viewBox="0 0 40 20"><line x1="4" y1="4" x2="4" y2="16" stroke="#e8edf5" stroke-width="2"/><line x1="10" y1="0" x2="10" y2="20" stroke="#e8edf5" stroke-width="2"/><line x1="16" y1="10" x2="30" y2="10" stroke="#e8edf5" stroke-width="2"/></svg><small>Tierra</small></div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- HISTORIAL -->
+    <section class="view" id="view-historial">
+      <div class="card">
+        <div class="section-title">Cálculos recientes</div>
+        <div id="historyList"><p class="empty">Aún no hay cálculos. Ve a la pestaña Calcular.</p></div>
+      </div>
+    </section>
+
+    <!-- AJUSTES -->
+    <section class="view" id="view-ajustes">
+      <div class="card">
+        <div class="section-title">Nivel de usuario</div>
+        <label class="lvl-opt" id="opt-beginner" onclick="setLevel('beginner')">
+          <input type="radio" name="lvl"><div><b>Principiante</b><small>Explicaciones sencillas, con analogías</small></div>
+        </label>
+        <label class="lvl-opt" id="opt-intermediate" onclick="setLevel('intermediate')">
+          <input type="radio" name="lvl"><div><b>Intermedio</b><small>Lenguaje técnico estándar</small></div>
+        </label>
+        <label class="lvl-opt" id="opt-advanced" onclick="setLevel('advanced')">
+          <input type="radio" name="lvl"><div><b>Avanzado</b><small>Enfoque de ingeniería, sin rodeos</small></div>
+        </label>
+      </div>
+      <div class="card">
+        <div class="section-title">Decimales</div>
+        <div class="stepper">
+          <button onclick="changeDecimals(-1)">−</button>
+          <span class="mono" id="decVal" style="font-size:16px; font-weight:700;">2</span>
+          <button onclick="changeDecimals(1)">+</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row-between"><div class="section-title" style="margin-bottom:2px;">Progreso de aprendizaje</div><span class="mono" id="progressLabel2" style="font-size:12px; color:var(--accent); font-weight:700;">0%</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill2" style="width:0%;"></div></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Guardar y restaurar tus datos</div>
+        <p style="font-size:12px; color:var(--muted); line-height:1.6; margin-bottom:12px;">
+          La app no usa almacenamiento del navegador. Descarga tu historial, nivel y progreso como archivo, y cárgalo cuando quieras continuar.
+        </p>
+        <div class="controls" style="margin-top:0;">
+          <button class="btn btn-ghost" onclick="exportData()">⬇️ Exportar datos</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">⬆️ Importar</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json" style="display:none;" onchange="importData(event)">
+      </div>
+      <div class="card">
+        <div class="section-title">Acerca de</div>
+        <p style="font-size:12px; color:var(--muted); line-height:1.6;">
+          Tutor Eléctrico VanGast nace del Proyecto Faraday: una herramienta educativa para estudiantes y docentes de electricidad, sin conexión a internet, con explicaciones que se adaptan a tu nivel. Ley de Ohm, Ley de Watt y procedimiento paso a paso en un solo lugar.
+        </p>
+        <p style="font-size:11px; color:var(--muted); margin-top:10px;">Build 002 · Motor matemático, biblioteca, historial y modo sin conexión.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="bottom">
+    <button class="active" data-view="calcular" onclick="switchView('calcular')"><span class="ic">🧮</span>Calcular</button>
+    <button data-view="aprender" onclick="switchView('aprender')"><span class="ic">🎓</span>Aprender</button>
+    <button data-view="biblioteca" onclick="switchView('biblioteca')"><span class="ic">📘</span>Biblioteca</button>
+    <button data-view="historial" onclick="switchView('historial')"><span class="ic">📝</span>Historial</button>
+    <button data-view="ajustes" onclick="switchView('ajustes')"><span class="ic">⚙</span>Ajustes</button>
+  </nav>
+
+</div>
+
+<script>
+/* =====================================================
+   ESTADO GLOBAL (en memoria — sin localStorage)
+===================================================== */
+const State = {
+  level: 'intermediate',
+  decimals: 2,
+  history: [],
+  lessonsRead: { V:false, I:false, R:false, P:false },
+  selected: [],
+  values: {}
+};
+
+const VARS = {
+  V: { name:'Voltaje', unit:'V', color:'var(--v)', full:'Voltaje / Tensión' },
+  I: { name:'Corriente', unit:'A', color:'var(--i)', full:'Corriente / Intensidad' },
+  R: { name:'Resistencia', unit:'Ω', color:'var(--r)', full:'Resistencia' },
+  P: { name:'Potencia', unit:'W', color:'var(--p)', full:'Potencia' }
+};
+
+const VAR_INFO = {
+  V:{ unit:'Voltios (V)', beginner:'Piensa en el voltaje como la "presión" que empuja a los electrones dentro de un cable, igual que la presión del agua en una tubería. Ejemplo: una pila de 9V.',
+      intermediate:'Es la fuerza electromotriz que impulsa a los electrones a través de un circuito. Se mide entre dos puntos. Ejemplo: una batería de 12V.',
+      advanced:'Diferencia de potencial eléctrico entre dos nodos, medida en julios por culombio. Determina la energía disponible por unidad de carga.'},
+  I:{ unit:'Amperios (A)', beginner:'La corriente es la cantidad de electrones que pasan por un punto del cable cada segundo, como el caudal de agua en una tubería.',
+      intermediate:'Es el flujo de carga eléctrica (electrones) que circula por el conductor. Ejemplo: un fusible que soporta máximo 15A.',
+      advanced:'Tasa de flujo de carga eléctrica por unidad de tiempo (culombios/segundo). Su dirección convencional va de + a −.'},
+  R:{ unit:'Ohmios (Ω)', beginner:'La resistencia es lo que dificulta el paso de la corriente, como un tramo angosto en una tubería de agua.',
+      intermediate:'Es la oposición física al flujo de corriente. Ejemplo: el filamento de un foco incandescente.',
+      advanced:'Propiedad de un material que se opone al flujo de portadores de carga, definida por ρ·L/A y dependiente de la temperatura.'},
+  P:{ unit:'Vatios (W)', beginner:'La potencia es qué tan rápido se "gasta" la energía eléctrica, como la fuerza con la que sale el agua de una manguera.',
+      intermediate:'Es la velocidad a la que se transfiere o consume energía eléctrica. Ejemplo: un motor de 1000W (1kW).',
+      advanced:'Energía disipada o transferida por unidad de tiempo, producto de tensión y corriente instantáneas: p(t)=v(t)·i(t).'}
+};
+
+const LEVEL_INTRO = {
+  beginner: 'En palabras simples: ',
+  intermediate: '',
+  advanced: 'Desde un enfoque técnico: '
+};
+
+/* =====================================================
+   INIT
+===================================================== */
+function startApp(){ document.getElementById('splash').classList.add('hidden'); }
+
+function switchView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('nav.bottom button').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+}
+
+function setLevel(lvl){
+  State.level = lvl;
+  ['beginner','intermediate','advanced'].forEach(l=>{
+    document.getElementById('opt-'+l).classList.toggle('active', l===lvl);
+    document.getElementById('opt-'+l).querySelector('input').checked = (l===lvl);
+  });
+  const labels = {beginner:'PRINCIPIANTE', intermediate:'INTERMEDIO', advanced:'AVANZADO'};
+  document.getElementById('lvlPill').textContent = labels[lvl];
+  renderLessons();
+  if(State.lastCalc) runCalculation(State.lastCalc, false);
+}
+
+function changeDecimals(delta){
+  State.decimals = Math.min(6, Math.max(0, State.decimals + delta));
+  document.getElementById('decVal').textContent = State.decimals;
+}
+
+function showToast(msg, ok=false){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = ok ? 'var(--ok)' : 'var(--danger)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+/* =====================================================
+   PICKER (Calcular)
+===================================================== */
+function renderPicker(){
+  const p = document.getElementById('picker');
+  p.innerHTML = '';
+  Object.keys(VARS).forEach(key=>{
+    const v = VARS[key];
+    const selected = State.selected.includes(key);
+    const disabled = !selected && State.selected.length >= 2;
+    const div = document.createElement('label');
+    div.className = 'pick' + (selected ? ' sel-'+key : '') + (disabled ? ' disabled' : '');
+    div.innerHTML = `<input type="checkbox" ${selected?'checked':''}>
+      <span class="dot"></span>
+      <span><span class="label" style="color:${selected?v.color:'inherit'}">${key}</span><small>${v.name}</small></span>`;
+    div.onclick = (e)=>{ e.preventDefault(); toggleVar(key); };
+    p.appendChild(div);
+  });
+}
+
+function toggleVar(key){
+  const idx = State.selected.indexOf(key);
+  if(idx >= 0){ State.selected.splice(idx,1); delete State.values[key]; }
+  else{ if(State.selected.length>=2) return; State.selected.push(key); }
+  renderPicker();
+  renderFields();
+  if(State.selected.length < 2){
+    document.getElementById('resultsCard').style.display='none';
+    document.getElementById('wireCard').style.display='none';
+    State.lastCalc = null;
+  }
+}
+
+function renderFields(){
+  const f = document.getElementById('fields');
+  f.innerHTML = '';
+  State.selected.forEach(key=>{
+    const v = VARS[key];
+    const div = document.createElement('div');
+    div.className = 'field';
+    div.innerHTML = `<label style="color:${v.color}">${v.name}</label>
+      <input type="number" step="any" min="0.000001" placeholder="Ej. 120" id="in-${key}">
+      <span class="unit">${v.unit}</span>`;
+    f.appendChild(div);
+    div.querySelector('input').addEventListener('input', onFieldInput);
+  });
+}
+
+function onFieldInput(){
+  if(State.selected.length !== 2) return;
+  const [a,b] = State.selected;
+  const va = document.getElementById('in-'+a).value;
+  const vb = document.getElementById('in-'+b).value;
+  if(va==='' || vb==='') return;
+  const na = Number(va), nb = Number(vb);
+  if(na<=0 || nb<=0){ showToast('Los valores deben ser mayores que cero.'); return; }
+  const data = {}; data[a]=na; data[b]=nb;
+  document.getElementById('resultsCard').style.display='none';
+  document.getElementById('wireCard').style.display='none';
+  document.getElementById('analyzing').classList.add('show');
+  setTimeout(()=>{
+    document.getElementById('analyzing').classList.remove('show');
+    runCalculation(data, true);
+  }, 550);
+}
+
+function clearAll(msg){
+  State.selected = [];
+  State.values = {};
+  State.lastCalc = null;
+  renderPicker();
+  renderFields();
+  document.getElementById('resultsCard').style.display='none';
+  document.getElementById('wireCard').style.display='none';
+  if(msg) showToast('Listo para un nuevo cálculo.', true);
+}
+
+/* =====================================================
+   MOTOR MATEMÁTICO
+===================================================== */
+function smartRound(val){
+  let clean = Number(Math.round(val + 'e' + 8) + 'e-' + 8);
+  if(Number.isInteger(clean)) return clean.toFixed(0);
+  return clean.toFixed(State.decimals);
+}
+function formatPrefixed(val, unit){
+  const num = Number(val);
+  if(num >= 1e6) return `${smartRound(num/1e6)} M${unit}`;
+  if(num >= 1e3) return `${smartRound(num/1e3)} k${unit}`;
+  if(num < 1 && num >= 1e-3) return `${smartRound(num*1e3)} m${unit}`;
+  if(num < 1e-3 && num > 0) return `${smartRound(num*1e6)} µ${unit}`;
+  return `${smartRound(num)} ${unit}`;
+}
+
+const CASES = {
+  'V,I': (v,i)=>({ R: v/i, P: v*i,
+    expl:{ R:{f:'R = V / I', s:(v,i)=>`R = ${v} / ${i}`, e:'Con el voltaje y la corriente conocidos, la resistencia mide cuánto se opone el circuito al paso de corriente.'},
+           P:{f:'P = V × I', s:(v,i)=>`P = ${v} × ${i}`, e:'La potencia indica la energía consumida por segundo, resultado directo del empuje (V) y el flujo (I).'} } }),
+  'V,R': (v,r)=>({ I: v/r, P: (v*v)/r,
+    expl:{ I:{f:'I = V / R', s:(v,r)=>`I = ${v} / ${r}`, e:'A mayor resistencia para el mismo voltaje, menor será la corriente que fluye.'},
+           P:{f:'P = V² / R', s:(v,r)=>`P = ${v}² / ${r}`, e:'Útil cuando no puedes medir la corriente directamente, pero sí conoces el voltaje y la resistencia del componente.'} } }),
+  'V,P': (v,p)=>({ I: p/v, R: (v*v)/p,
+    expl:{ I:{f:'I = P / V', s:(p,v)=>`I = ${p} / ${v}`, e:'Muy usada en instalaciones residenciales para calcular el amperaje de un electrodoméstico y elegir el calibre del cable.'},
+           R:{f:'R = V² / P', s:(v,p)=>`R = ${v}² / ${p}`, e:'Calcula la resistencia interna de un equipo a partir de su consumo nominal y su voltaje de trabajo.'} } }),
+  'I,R': (i,r)=>({ V: i*r, P: (i*i)*r,
+    expl:{ V:{f:'V = I × R', s:(i,r)=>`V = ${i} × ${r}`, e:'Conociendo la corriente y la resistencia, obtenemos el voltaje que ese componente está consumiendo.'},
+           P:{f:'P = I² × R', s:(i,r)=>`P = ${i}² × ${r}`, e:'Este es el Efecto Joule: la energía disipada en forma de calor por la fricción de los electrones contra la resistencia.'} } }),
+  'I,P': (i,p)=>({ V: p/i, R: p/(i*i),
+    expl:{ V:{f:'V = P / I', s:(p,i)=>`V = ${p} / ${i}`, e:'Permite descubrir a qué voltaje opera un sistema si conoces su consumo y la corriente que circula.'},
+           R:{f:'R = P / I²', s:(p,i)=>`R = ${p} / ${i}²`, e:'Obtiene la resistencia disipadora a partir de la carga térmica (W) y el flujo de electrones (A).'} } }),
+  'R,P': (r,p)=>({ V: Math.sqrt(p*r), I: Math.sqrt(p/r),
+    expl:{ V:{f:'V = √(P × R)', s:(p,r)=>`V = √(${p} × ${r})`, e:'Usando raíces cuadradas aislamos el voltaje. Útil al dimensionar resistores en diseño de circuitos.'},
+           I:{f:'I = √(P / R)', s:(p,r)=>`I = √(${p} / ${r})`, e:'Determina la corriente máxima que puede atravesar un resistor antes de superar su capacidad de disipación.'} } })
+};
+
+function runCalculation(data, addHistory){
+  State.lastCalc = data;
+  const keys = Object.keys(data);
+  const caseKey = keys.join(',');
+  const fn = CASES[caseKey];
+  if(!fn) return;
+  const [k1,k2] = keys;
+  const result = fn(data[k1], data[k2]);
+  const outKeys = Object.keys(result.expl);
+
+  renderWire(keys, outKeys);
+  renderTimeline(data, keys, result, outKeys);
+
+  document.getElementById('wireCard').style.display='block';
+  document.getElementById('resultsCard').style.display='block';
+
+  if(addHistory) saveHistory(data, result, outKeys);
+}
+
+function renderWire(inKeys, outKeys){
+  const path = document.getElementById('wirePath');
+  const c1 = VARS[inKeys[0]].color, c2 = VARS[outKeys[0]].color;
+  path.style.stroke = 'url(#g1)';
+  let defs = document.getElementById('wireDefs');
+  const svg = document.querySelector('#wireCard svg');
+  if(!defs){
+    defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+    defs.id = 'wireDefs';
+    defs.innerHTML = `<linearGradient id="g1" x1="0" y1="0" x2="1" y2="0"></linearGradient>`;
+    svg.prepend(defs);
+  }
+  defs.querySelector('linearGradient').innerHTML =
+    `<stop offset="0%" stop-color="${resolveColor(inKeys[0])}"/><stop offset="100%" stop-color="${resolveColor(outKeys[0])}"/>`;
+}
+function resolveColor(key){
+  const map = {V:'#ff5c6c', I:'#3ddc84', R:'#ffab4d', P:'#5b9dff'};
+  return map[key];
+}
+
+function renderTimeline(data, inKeys, result, outKeys){
+  const tl = document.getElementById('timeline');
+  const steps = [];
+  steps.push({ title:'Datos conocidos', text: inKeys.map(k=>`${k} = ${data[k]} ${VARS[k].unit}`).join('   •   ') });
+  outKeys.forEach(k=>{
+    const e = result.expl[k];
+    const raw = result[k];
+    const args = inKeys.map(ik=>data[ik]);
+    steps.push({
+      title: `Fórmula seleccionada — ${VARS[k].name}`,
+      text: e.f
+    });
+    steps.push({
+      title: 'Sustitución',
+      text: e.s(...args)
+    });
+    steps.push({
+      title: `Resultado — ${k}`,
+      isResult:true, key:k,
+      value: raw, explain: e.e
+    });
+  });
+  steps.push({ title:'Respuesta final', text: outKeys.map(k=>`${k} = ${smartRound(result[k])} ${VARS[k].unit}`).join('   •   ') });
+
+  tl.innerHTML = steps.map((s,idx)=>{
+    const last = idx === steps.length-1;
+    if(s.isResult){
+      const formatted = smartRound(s.value);
+      const prefixed = formatPrefixed(s.value, VARS[s.key].unit);
+      const showAlt = (formatted + ' ' + VARS[s.key].unit) !== prefixed;
+      return `<div class="tl-item"><div class="tl-marker"><div class="tl-num" style="background:${VARS[s.key].color}">${idx+1}</div>${last?'':'<div class=\"tl-line\"></div>'}</div>
+        <div class="tl-body">
+          <div class="tl-title">${s.title}</div>
+          <div class="proc-answer" style="color:${VARS[s.key].color}">${formatted} ${VARS[s.key].unit}${showAlt?`<span class="alt">→ ${prefixed}</span>`:''}</div>
+          <div class="didactic">💡 <b>${State.level==='beginner'?'En palabras simples':State.level==='advanced'?'Enfoque técnico':'Explicación'}:</b> ${LEVEL_INTRO[State.level]}${s.explain}</div>
+        </div></div>`;
+    }
+    return `<div class="tl-item"><div class="tl-marker"><div class="tl-num">${idx+1}</div>${last?'':'<div class=\"tl-line\"></div>'}</div>
+      <div class="tl-body"><div class="tl-title">${s.title}</div><div class="tl-text mono">${s.text}</div></div></div>`;
+  }).join('');
+}
+
+function copyResult(){
+  if(!State.lastCalc){ showToast('No hay resultados para copiar.'); return; }
+  const keys = Object.keys(State.lastCalc);
+  const fn = CASES[keys.join(',')];
+  const result = fn(State.lastCalc[keys[0]], State.lastCalc[keys[1]]);
+  const outKeys = Object.keys(result.expl);
+  let text = keys.map(k=>`${k}=${State.lastCalc[k]}${VARS[k].unit}`).join(', ') + ' → ';
+  text += outKeys.map(k=>`${k}=${smartRound(result[k])}${VARS[k].unit}`).join(', ');
+  navigator.clipboard.writeText(text).then(()=>showToast('Copiado al portapapeles.', true))
+    .catch(()=>showToast('No se pudo copiar.'));
+}
+
+/* =====================================================
+   HISTORIAL (en memoria)
+===================================================== */
+function saveHistory(data, result, outKeys){
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const inStr = Object.keys(data).map(k=>`${k}=${data[k]}${VARS[k].unit}`).join(', ');
+  const outStr = outKeys.map(k=>`${k}=${smartRound(result[k])}${VARS[k].unit}`).join(', ');
+  State.history.unshift({ id: Date.now(), time, inStr, outStr, data });
+  if(State.history.length > 20) State.history.pop();
+  renderHistory();
+}
+
+function renderHistory(){
+  const el = document.getElementById('historyList');
+  if(State.history.length === 0){
+    el.innerHTML = '<p class="empty">Aún no hay cálculos. Ve a la pestaña Calcular.</p>';
+    return;
+  }
+  el.innerHTML = State.history.map(item=>`
+    <div class="hist-item">
+      <div class="hist-top"><span>${item.time}</span><span>#${item.id.toString().slice(-4)}</span></div>
+      <div class="hist-eq">${item.inStr} → <b>${item.outStr}</b></div>
+      <div class="hist-actions">
+        <button onclick="reuseHistory(${item.id})">🔄 Repetir</button>
+        <button onclick="deleteHistory(${item.id})">🗑️ Eliminar</button>
+      </div>
+    </div>`).join('');
+}
+
+function reuseHistory(id){
+  const item = State.history.find(h=>h.id===id);
+  if(!item) return;
+  switchView('calcular');
+  State.selected = Object.keys(item.data);
+  renderPicker(); renderFields();
+  State.selected.forEach(k=>{ document.getElementById('in-'+k).value = item.data[k]; });
+  runCalculation(item.data, false);
+}
+function deleteHistory(id){
+  State.history = State.history.filter(h=>h.id!==id);
+  renderHistory();
+}
+
+/* =====================================================
+   APRENDER
+===================================================== */
+const LESSON_TIME = { V:'30 s', I:'35 s', R:'40 s', P:'35 s' };
+function renderLessons(){
+  const el = document.getElementById('lessons');
+  el.innerHTML = Object.keys(VARS).map(k=>`
+    <div class="lesson card" style="margin-bottom:10px; box-shadow:none;">
+      <div class="lesson-head">
+        <div style="display:flex; gap:10px; align-items:center;">
+          <div class="swatch" style="background:${VARS[k].color}; color:#08121c;">${k}</div>
+          <h3>¿Qué es ${VARS[k].full.toLowerCase()}?</h3>
+        </div>
+        <span class="time">${LESSON_TIME[k]}</span>
+      </div>
+      <p>${LEVEL_INTRO[State.level]}${VAR_INFO[k][State.level]}</p>
+      <label class="lesson-check">
+        <input type="checkbox" ${State.lessonsRead[k]?'checked':''} onchange="toggleLesson('${k}')">
+        Marcar como leída
+      </label>
+    </div>`).join('');
+}
+function toggleLesson(k){
+  State.lessonsRead[k] = !State.lessonsRead[k];
+  updateProgress();
+}
+function updateProgress(){
+  const total = Object.keys(State.lessonsRead).length;
+  const done = Object.values(State.lessonsRead).filter(Boolean).length;
+  const pct = Math.round((done/total)*100);
+  ['progressFill','progressFill2'].forEach(id=>document.getElementById(id).style.width = pct+'%');
+  ['progressLabel','progressLabel2'].forEach(id=>document.getElementById(id).textContent = pct+'%');
+}
+
+function showTri(key){
+  const info = VAR_INFO[key];
+  const box = document.getElementById('tri-info');
+  box.style.display = 'block';
+  box.style.borderLeftColor = VARS[key].color;
+  box.innerHTML = `<b style="color:${VARS[key].color}; font-size:14px;">${VARS[key].full}</b><br>
+    <b>Unidad:</b> ${info.unit}<br><br>${LEVEL_INTRO[State.level]}${info[State.level]}`;
+}
+
+/* =====================================================
+   EXPORTAR / IMPORTAR DATOS (sin localStorage)
+===================================================== */
+function exportData(){
+  const payload = {
+    app: 'VanGast Tutor Eléctrico',
+    build: '002',
+    exportedAt: new Date().toISOString(),
+    level: State.level,
+    decimals: State.decimals,
+    lessonsRead: State.lessonsRead,
+    history: State.history
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `vangast-datos-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Datos exportados.', true);
+}
+
+function importData(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      if(data.level) State.level = data.level;
+      if(typeof data.decimals === 'number') State.decimals = data.decimals;
+      if(data.lessonsRead) State.lessonsRead = data.lessonsRead;
+      if(Array.isArray(data.history)) State.history = data.history;
+      document.getElementById('decVal').textContent = State.decimals;
+      setLevel(State.level);
+      renderHistory();
+      updateProgress();
+      showToast('Datos importados correctamente.', true);
+    }catch(err){
+      showToast('El archivo no es válido.');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+/* =====================================================
+   ARRANQUE
+===================================================== */
+function init(){
+  renderPicker();
+  renderFields();
+  renderLessons();
+  renderHistory();
+  updateProgress();
+  setLevel('intermediate');
+}
+init();
+
+// Registro del Service Worker: habilita instalación y uso 100% sin conexión
+// cuando este archivo se sirve desde un servidor/hosting (http/https).
+// Si se abre como archivo local (file://) el navegador bloquea Service
+// Workers por seguridad; la app sigue funcionando con normalidad.
+if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
