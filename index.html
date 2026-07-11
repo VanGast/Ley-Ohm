@@ -226,6 +226,13 @@ nav.bottom button.active .ic{ transform:translateY(-1px); filter: drop-shadow(0 
 .tri-wrap p{ margin-top:6px; font-size:11.5px; color:var(--muted); font-weight:600;}
 #tri-info{ margin-top:14px; padding:12px; border-radius:10px; background:var(--card2); border-left:4px solid var(--accent); display:none; font-size:12.5px; line-height:1.5;}
 
+/* ---------- LABORATORIO VIRTUAL ---------- */
+.lab-readout{ display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; background:var(--bg-grid); border:1px solid var(--border); border-radius:10px; padding:12px 14px; font-size:13px; font-family:'JetBrains Mono',monospace; }
+.lab-readout div{ display:flex; align-items:center; gap:7px; }
+.lab-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+input[type="range"]{ width:100%; accent-color:var(--accent); height:6px; margin-top:4px; }
+.lab-electron{ fill:var(--i); }
+
 /* ---------- BIBLIOTECA ---------- */
 .lib-cat{ margin-bottom:8px; }
 .lib-cat summary{ cursor:pointer; font-weight:700; font-size:13.5px; padding:12px 0; list-style:none; display:flex; justify-content:space-between; align-items:center;}
@@ -306,7 +313,7 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
     <div class="bolt">⚡</div>
     <div class="brand">VanGast · Tutor Eléctrico</div>
     <div class="tagline">Aprende · Calcula · Comprende</div>
-    <div class="ver mono">v1.0.0-beta · Build 005</div>
+    <div class="ver mono">v1.0.0-beta · Build 006</div>
     <button class="btn-start" onclick="startApp()">COMENZAR</button>
   </div>
 
@@ -511,6 +518,42 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
         </div>
         <div id="tri-info"></div>
       </div>
+
+      <div class="card">
+        <div class="section-title">🔬 Laboratorio virtual</div>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:6px;">Mueve los controles y observa en vivo cómo cambia el circuito. (Simulación ilustrativa, no a escala real.)</p>
+
+        <svg id="labCircuit" viewBox="0 0 300 160" style="width:100%; max-width:320px; display:block; margin:10px auto;">
+          <rect x="40" y="40" width="220" height="80" fill="none" stroke="#4b5568" stroke-width="4" rx="8"/>
+          <!-- batería (izquierda) -->
+          <line x1="30" y1="58" x2="30" y2="102" stroke="var(--v)" stroke-width="6" stroke-linecap="round"/>
+          <line x1="20" y1="70" x2="20" y2="90" stroke="var(--v)" stroke-width="3" stroke-linecap="round"/>
+          <text x="8" y="30" font-size="11" fill="var(--v)" font-weight="700">+V</text>
+          <!-- foco (derecha) -->
+          <circle id="labBulbGlow" cx="260" cy="80" r="34" fill="var(--warn)" opacity="0.1"/>
+          <circle id="labBulb" cx="260" cy="80" r="17" fill="#fbbf24" opacity="0.25" stroke="#92400e" stroke-width="2"/>
+          <line x1="251" y1="71" x2="269" y2="89" stroke="#92400e" stroke-width="1.5"/>
+          <line x1="269" y1="71" x2="251" y2="89" stroke="#92400e" stroke-width="1.5"/>
+          <g id="labElectrons"></g>
+        </svg>
+
+        <div class="lab-readout">
+          <div><span class="lab-dot" style="background:var(--v)"></span>V = <b id="labVout">12</b> V</div>
+          <div><span class="lab-dot" style="background:var(--i)"></span>I = <b id="labIout">1.2</b> A</div>
+          <div><span class="lab-dot" style="background:var(--r)"></span>R = <b id="labRout">10</b> Ω</div>
+          <div><span class="lab-dot" style="background:var(--p)"></span>P = <b id="labPout">14.4</b> W</div>
+        </div>
+
+        <div class="field" style="margin-top:14px;">
+          <label style="color:var(--v)">Voltaje de la batería</label>
+          <input type="range" min="1" max="24" step="1" value="12" id="labV" oninput="updateLab()">
+        </div>
+        <div class="field">
+          <label style="color:var(--r)">Resistencia del foco</label>
+          <input type="range" min="1" max="100" step="1" value="10" id="labR" oninput="updateLab()">
+        </div>
+        <div class="didactic" id="labCaption"></div>
+      </div>
     </section>
 
     <!-- BIBLIOTECA -->
@@ -661,7 +704,7 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
         <p style="font-size:12px; color:var(--muted); line-height:1.6;">
           Tutor Eléctrico VanGast nace del Proyecto Faraday: una herramienta educativa para estudiantes y docentes de electricidad, sin conexión a internet, con explicaciones que se adaptan a tu nivel. Ley de Ohm, Ley de Watt y procedimiento paso a paso en un solo lugar.
         </p>
-        <p style="font-size:11px; color:var(--muted); margin-top:10px;">Build 005 · Circuitos de corriente alterna: reactancia, impedancia, ángulo de fase y factor de potencia.</p>
+        <p style="font-size:11px; color:var(--muted); margin-top:10px;">Build 006 · Laboratorio virtual: simulación interactiva de un circuito de batería y foco.</p>
       </div>
     </section>
 
@@ -756,6 +799,7 @@ function setLevel(lvl){
   if(document.getElementById('resistorResult').style.display === 'block') calcResistor();
   if(document.getElementById('vdropResult').style.display === 'block') calcVDrop();
   if(document.getElementById('acResult').style.display === 'block') calcAC();
+  updateLab();
 }
 
 function changeDecimals(delta){
@@ -1215,8 +1259,62 @@ function calcAC(){
 }
 
 /* =====================================================
-   HISTORIAL (en memoria)
+   LABORATORIO VIRTUAL (simulación interactiva)
 ===================================================== */
+const LAB_LOOP_PATH = "M40,40 H260 V120 H40 Z";
+
+function buildLabElectrons(durationSec, count){
+  const g = document.getElementById('labElectrons');
+  g.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+  for(let idx=0; idx<count; idx++){
+    const circle = document.createElementNS(ns, 'circle');
+    circle.setAttribute('r', '3.2');
+    circle.setAttribute('class', 'lab-electron');
+    const anim = document.createElementNS(ns, 'animateMotion');
+    anim.setAttribute('dur', `${durationSec}s`);
+    anim.setAttribute('repeatCount', 'indefinite');
+    anim.setAttribute('path', LAB_LOOP_PATH);
+    anim.setAttribute('begin', `${-(durationSec * idx / count)}s`);
+    circle.appendChild(anim);
+    g.appendChild(circle);
+  }
+}
+
+function updateLab(){
+  const v = Number(document.getElementById('labV').value);
+  const r = Number(document.getElementById('labR').value);
+  const i = v / r;
+  const p = v * i;
+
+  document.getElementById('labVout').textContent = v;
+  document.getElementById('labRout').textContent = r;
+  document.getElementById('labIout').textContent = smartRound(i);
+  document.getElementById('labPout').textContent = smartRound(p);
+
+  // Brillo del foco: escala suavizada con raíz cuadrada para que sea visualmente legible
+  const brightness = Math.min(1, Math.sqrt(p) / Math.sqrt(45));
+  const bulb = document.getElementById('labBulb');
+  const glow = document.getElementById('labBulbGlow');
+  bulb.setAttribute('opacity', (0.25 + brightness * 0.75).toFixed(2));
+  bulb.setAttribute('r', (15 + brightness * 6).toFixed(1));
+  glow.setAttribute('opacity', (brightness * 0.55).toFixed(2));
+  glow.setAttribute('r', (28 + brightness * 18).toFixed(1));
+
+  // Velocidad del flujo de electrones: mayor corriente → menor duración de la animación
+  const duration = Math.max(0.25, Math.min(6, 3 / i));
+  buildLabElectrons(duration, 6);
+
+  const introMap = { beginner:'En palabras simples: ', intermediate:'', advanced:'Desde un enfoque técnico: ' };
+  const textMap = {
+    beginner:`Con una batería de ${v}V y un foco que opone ${r}Ω de resistencia, circulan ${smartRound(i)}A. Mientras más rápido veas moverse los puntos, más corriente hay; mientras más brillante el foco, más potencia se está consumiendo.`,
+    intermediate:`I = V/R = ${v}/${r} = ${smartRound(i)}A, y P = V×I = ${smartRound(p)}W. Sube el voltaje o baja la resistencia para ver el foco más brillante y el flujo más rápido.`,
+    advanced:`Con V=${v}V y R=${r}Ω: I=${smartRound(i)}A, P=${smartRound(p)}W. La velocidad de los portadores en la animación es proporcional a I, y el brillo a √P para mantener la escala legible.`
+  };
+  document.getElementById('labCaption').innerHTML = `💡 <b>Qué está pasando:</b> ${introMap[State.level]}${textMap[State.level]}`;
+}
+
+
 function saveHistory(data, result, outKeys){
   const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   const inStr = Object.keys(data).map(k=>`${k}=${data[k]}${VARS[k].unit}`).join(', ');
