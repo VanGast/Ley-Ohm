@@ -264,7 +264,7 @@ table.tbl th{ color:var(--muted); text-transform:uppercase; font-size:10px; lett
 
 /* ---------- SEGMENTED TOOL SWITCHER ---------- */
 .seg-tools{ display:flex; gap:6px; background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:5px; margin-bottom:14px; }
-.seg-btn{ flex:1; background:none; border:none; color:var(--muted); font-weight:700; font-size:11.5px; padding:9px 4px; border-radius:8px; cursor:pointer; }
+.seg-btn{ flex:1; background:none; border:none; color:var(--muted); font-weight:700; font-size:10.5px; padding:9px 2px; border-radius:8px; cursor:pointer; }
 .seg-btn.active{ background:var(--accent); color:#031018; }
 
 /* ---------- CÓDIGO DE COLORES (resistor) ---------- */
@@ -306,7 +306,7 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
     <div class="bolt">⚡</div>
     <div class="brand">VanGast · Tutor Eléctrico</div>
     <div class="tagline">Aprende · Calcula · Comprende</div>
-    <div class="ver mono">v1.0.0-beta · Build 004</div>
+    <div class="ver mono">v1.0.0-beta · Build 005</div>
     <button class="btn-start" onclick="startApp()">COMENZAR</button>
   </div>
 
@@ -322,9 +322,10 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
       <div id="toast"></div>
 
       <div class="seg-tools" id="segTools">
-        <button class="seg-btn active" data-tool="ohm" onclick="switchTool('ohm')">⚡ Ley de Ohm</button>
+        <button class="seg-btn active" data-tool="ohm" onclick="switchTool('ohm')">⚡ Ohm</button>
         <button class="seg-btn" data-tool="resistor" onclick="switchTool('resistor')">🎨 Colores</button>
         <button class="seg-btn" data-tool="vdrop" onclick="switchTool('vdrop')">🔌 Caída V</button>
+        <button class="seg-btn" data-tool="ac" onclick="switchTool('ac')">🌊 CA</button>
       </div>
 
       <!-- HERRAMIENTA: LEY DE OHM -->
@@ -427,6 +428,38 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
           <div class="proc-answer" id="vdropValue" style="color:var(--accent);"></div>
           <div class="tl-text mono" id="vdropPercent"></div>
           <div class="didactic" id="vdropExplain"></div>
+        </div>
+      </div>
+
+      <!-- HERRAMIENTA: CORRIENTE ALTERNA -->
+      <div id="tool-ac" class="tool-panel" style="display:none;">
+        <div class="card">
+          <div class="section-title">Circuito en serie</div>
+          <div class="seg-tools" id="segAcCircuit" style="margin-bottom:16px;">
+            <button class="seg-btn active" data-circuit="rl" onclick="setACCircuit('rl')">🌀 RL (bobina)</button>
+            <button class="seg-btn" data-circuit="rc" onclick="setACCircuit('rc')">🔋 RC (capacitor)</button>
+          </div>
+          <div class="fields">
+            <div class="field"><label style="color:var(--r)">Resistencia (R)</label>
+              <input type="number" step="any" min="0" placeholder="Ej. 100" id="ac-r" oninput="calcAC()"><span class="unit">Ω</span>
+            </div>
+            <div class="field" id="ac-l-field"><label style="color:var(--p)">Inductancia (L)</label>
+              <input type="number" step="any" min="0" placeholder="Ej. 50" id="ac-l" oninput="calcAC()"><span class="unit">mH</span>
+            </div>
+            <div class="field" id="ac-c-field" style="display:none;"><label style="color:var(--p)">Capacitancia (C)</label>
+              <input type="number" step="any" min="0" placeholder="Ej. 10" id="ac-c" oninput="calcAC()"><span class="unit">µF</span>
+            </div>
+            <div class="field"><label style="color:var(--accent)">Frecuencia (f)</label>
+              <input type="number" step="any" min="0" placeholder="Ej. 60" id="ac-f" oninput="calcAC()"><span class="unit">Hz</span>
+            </div>
+            <div class="field"><label style="color:var(--v)">Voltaje aplicado (opcional)</label>
+              <input type="number" step="any" min="0" placeholder="Ej. 120" id="ac-v" oninput="calcAC()"><span class="unit">V</span>
+            </div>
+          </div>
+        </div>
+        <div class="card" id="acResult" style="display:none;">
+          <div class="section-title">Resultado</div>
+          <div class="timeline" id="acTimeline"></div>
         </div>
       </div>
 
@@ -540,6 +573,22 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
           </div>
         </details>
         <details class="lib-cat">
+          <summary>🌊 Corriente alterna (CA)</summary>
+          <div class="body">
+            A diferencia de la corriente continua (CD), en CA el voltaje y la corriente cambian de dirección periódicamente (por ejemplo, 60 veces por segundo en la red eléctrica de muchos países de América).
+            <div style="margin-top:8px;">
+              <span class="formula-chip">Xl = 2πf L</span>
+              <span class="formula-chip">Xc = 1 / (2πf C)</span>
+              <span class="formula-chip">Z = √(R² + X²)</span>
+              <span class="formula-chip">φ = arctan(X/R)</span>
+            </div>
+            <br>
+            <b style="color:var(--text)">Impedancia (Z):</b> la "resistencia total" en CA, que combina la resistencia normal con el efecto de bobinas y capacitores.<br><br>
+            <b style="color:var(--text)">Ángulo de fase (φ):</b> el desfase entre el voltaje y la corriente. En una bobina la corriente se atrasa; en un capacitor, se adelanta.<br><br>
+            <b style="color:var(--text)">Factor de potencia:</b> qué tan eficientemente se aprovecha la energía entregada; 1 es ideal, valores bajos indican más pérdidas.
+          </div>
+        </details>
+        <details class="lib-cat">
           <summary>🔣 Símbolos eléctricos</summary>
           <div class="body">
             <div class="sym-grid">
@@ -612,7 +661,7 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
         <p style="font-size:12px; color:var(--muted); line-height:1.6;">
           Tutor Eléctrico VanGast nace del Proyecto Faraday: una herramienta educativa para estudiantes y docentes de electricidad, sin conexión a internet, con explicaciones que se adaptan a tu nivel. Ley de Ohm, Ley de Watt y procedimiento paso a paso en un solo lugar.
         </p>
-        <p style="font-size:11px; color:var(--muted); margin-top:10px;">Build 004 · Código de colores de resistencias, caída de tensión en cables y tema claro.</p>
+        <p style="font-size:11px; color:var(--muted); margin-top:10px;">Build 005 · Circuitos de corriente alterna: reactancia, impedancia, ángulo de fase y factor de potencia.</p>
       </div>
     </section>
 
@@ -682,7 +731,7 @@ function switchView(name){
 }
 
 function switchTool(name){
-  ['ohm','resistor','vdrop'].forEach(t=>{
+  ['ohm','resistor','vdrop','ac'].forEach(t=>{
     document.getElementById('tool-'+t).style.display = (t===name) ? 'block' : 'none';
   });
   document.querySelectorAll('#segTools .seg-btn').forEach(b=>b.classList.toggle('active', b.dataset.tool===name));
@@ -706,6 +755,7 @@ function setLevel(lvl){
   if(State.lastCalc) runCalculation(State.lastCalc, false);
   if(document.getElementById('resistorResult').style.display === 'block') calcResistor();
   if(document.getElementById('vdropResult').style.display === 'block') calcVDrop();
+  if(document.getElementById('acResult').style.display === 'block') calcAC();
 }
 
 function changeDecimals(delta){
@@ -1049,6 +1099,119 @@ function calcVDrop(){
     advanced:'ΔV = k·I·L·Rkm, donde k=2 para monofásico (ida y vuelta) o √3 para trifásico, calculado con la resistividad del cobre por kilómetro según el calibre AWG.'
   };
   document.getElementById('vdropExplain').innerHTML = `💡 <b>Explicación:</b> ${introMap[State.level]}${textMap[State.level]}<br><br>${warning}`;
+}
+
+/* =====================================================
+   CORRIENTE ALTERNA (circuitos RL / RC en serie)
+===================================================== */
+State.acCircuit = 'rl';
+
+function setACCircuit(type){
+  State.acCircuit = type;
+  document.querySelectorAll('#segAcCircuit .seg-btn').forEach(b=>b.classList.toggle('active', b.dataset.circuit===type));
+  document.getElementById('ac-l-field').style.display = (type==='rl') ? 'block' : 'none';
+  document.getElementById('ac-c-field').style.display = (type==='rc') ? 'block' : 'none';
+  calcAC();
+}
+
+function calcAC(){
+  const r = Number(document.getElementById('ac-r').value);
+  const f = Number(document.getElementById('ac-f').value);
+  const v = Number(document.getElementById('ac-v').value);
+  const box = document.getElementById('acResult');
+  const isRL = State.acCircuit === 'rl';
+  const lRaw = Number(document.getElementById('ac-l').value);
+  const cRaw = Number(document.getElementById('ac-c').value);
+
+  if(!r || !f || (isRL && !lRaw) || (!isRL && !cRaw)){ box.style.display='none'; return; }
+
+  const w = 2 * Math.PI * f;
+  let x, xLabel, xFormula, xSub;
+  if(isRL){
+    const lH = lRaw / 1000;
+    x = w * lH;
+    xLabel = 'Reactancia inductiva (Xl)';
+    xFormula = 'Xl = 2πf L';
+    xSub = `Xl = 2π × ${f} × ${lRaw}mH`;
+  }else{
+    const cF = cRaw / 1e6;
+    x = 1 / (w * cF);
+    xLabel = 'Reactancia capacitiva (Xc)';
+    xFormula = 'Xc = 1 / (2πf C)';
+    xSub = `Xc = 1 / (2π × ${f} × ${cRaw}µF)`;
+  }
+  const z = Math.sqrt(r*r + x*x);
+  const phiRad = Math.atan2(x, r);
+  const phiDeg = phiRad * (180/Math.PI);
+  const period = 1/f;
+  const pf = r/z; // factor de potencia = cos(phi)
+
+  const introMap = { beginner:'En palabras simples: ', intermediate:'', advanced:'Desde un enfoque técnico: ' };
+  const lvl = State.level;
+
+  const steps = [];
+  steps.push({ title:'Datos conocidos', text: `R = ${r} Ω   •   f = ${f} Hz   •   ${isRL ? 'L = '+lRaw+' mH' : 'C = '+cRaw+' µF'}${v?'   •   V = '+v+' V':''}` });
+  steps.push({ title: xLabel, text: xFormula });
+  steps.push({ title:'Sustitución', text: xSub });
+  steps.push({
+    isResult:true, color:'var(--p)',
+    title:`Resultado — ${isRL?'Xl':'Xc'}`,
+    value:`${smartRound(x)} Ω`,
+    explain: isRL
+      ? { beginner:'La bobina se opone más al paso de la corriente mientras más rápido cambia (más frecuencia) o más grande es.', intermediate:'La reactancia inductiva crece con la frecuencia: a mayor f, más se opone la bobina a los cambios de corriente.', advanced:'Xl es directamente proporcional a ω y L; en DC (f=0) la bobina se comporta como un cortocircuito ideal.' }[lvl]
+      : { beginner:'El capacitor deja pasar más corriente mientras más rápido cambia la señal (más frecuencia); a baja frecuencia se opone más.', intermediate:'La reactancia capacitiva disminuye con la frecuencia: a mayor f, menos se opone el capacitor.', advanced:'Xc es inversamente proporcional a ω y C; en DC (f=0) el capacitor se comporta como un circuito abierto ideal.' }[lvl]
+  });
+  steps.push({
+    isResult:true, color:'var(--accent)',
+    title:'Impedancia total (Z)',
+    value:`${smartRound(z)} Ω`,
+    formula:'Z = √(R² + X²)',
+    explain:{ beginner:'La impedancia es la "resistencia total" del circuito en corriente alterna, combinando la resistencia normal y el efecto de la bobina o el capacitor.', intermediate:'La impedancia combina la resistencia y la reactancia mediante suma vectorial (teorema de Pitágoras), ya que ambas actúan en direcciones distintas de fase.', advanced:'Z es la magnitud del número complejo R + jX, la generalización de la Ley de Ohm para corriente alterna.' }[lvl]
+  });
+  steps.push({
+    isResult:true, color:'var(--i)',
+    title:'Ángulo de fase (φ)',
+    value:`${smartRound(phiDeg)}°`,
+    explain: isRL
+      ? { beginner:'Este ángulo indica que la corriente llega "atrasada" respecto al voltaje, típico de una bobina.', intermediate:'En un circuito RL, la corriente se atrasa respecto al voltaje un ángulo φ (corriente en atraso).', advanced:'φ = arctan(Xl/R); la corriente atrasa al voltaje, comportamiento característico de cargas inductivas.' }[lvl]
+      : { beginner:'Este ángulo indica que la corriente llega "adelantada" respecto al voltaje, típico de un capacitor.', intermediate:'En un circuito RC, la corriente se adelanta respecto al voltaje un ángulo φ (corriente en adelanto).', advanced:'φ = arctan(Xc/R); la corriente adelanta al voltaje, comportamiento característico de cargas capacitivas.' }[lvl]
+  });
+  steps.push({ title:'Período de la señal', text:`T = 1/f = ${smartRound(period*1000)} ms` });
+
+  if(v){
+    const i = v / z;
+    steps.push({
+      isResult:true, color:'var(--v)',
+      title:'Corriente resultante (I)',
+      value:`${smartRound(i)} A`,
+      formula:'I = V / Z',
+      explain:{ beginner:'Con el voltaje que aplicaste y la impedancia calculada, así de grande sería la corriente que circula.', intermediate:'Aplicando la Ley de Ohm generalizada (I = V/Z), obtenemos la corriente eficaz del circuito.', advanced:'I = V/Z en magnitud; el ángulo de la corriente respecto al voltaje es −φ (RL) o +φ (RC).' }[lvl]
+    });
+    steps.push({
+      isResult:true, color:'var(--ok)',
+      title:'Factor de potencia',
+      value:`${smartRound(pf)}`,
+      formula:'FP = cos(φ) = R / Z',
+      explain:{ beginner:'Mientras más cerca de 1, más eficientemente se aprovecha la energía; mientras más bajo, más energía "se desperdicia" oscilando entre la fuente y la bobina o el capacitor.', intermediate:'El factor de potencia indica qué fracción de la energía entregada se convierte en trabajo útil; un FP bajo implica más corriente reactiva circulando.', advanced:'FP = cos(φ) = R/Z; valores bajos incrementan pérdidas en los conductores para la misma potencia activa entregada.' }[lvl]
+    });
+  }
+
+  document.getElementById('acTimeline').innerHTML = steps.map((s,idx)=>{
+    const last = idx === steps.length-1;
+    if(s.isResult){
+      return `<div class="tl-item"><div class="tl-marker"><div class="tl-num" style="background:${s.color}">${idx+1}</div>${last?'':'<div class=\"tl-line\"></div>'}</div>
+        <div class="tl-body">
+          <div class="tl-title">${s.title}</div>
+          ${s.formula?`<div class="proc-line">${s.formula}</div>`:''}
+          <div class="proc-answer" style="color:${s.color}">${s.value}</div>
+          <div class="didactic">💡 <b>Explicación:</b> ${introMap[lvl]}${s.explain}</div>
+        </div></div>`;
+    }
+    return `<div class="tl-item"><div class="tl-marker"><div class="tl-num">${idx+1}</div>${last?'':'<div class=\"tl-line\"></div>'}</div>
+      <div class="tl-body"><div class="tl-title">${s.title}</div><div class="tl-text mono">${s.text}</div></div></div>`;
+  }).join('');
+
+  box.style.display = 'block';
 }
 
 /* =====================================================
