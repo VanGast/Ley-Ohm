@@ -1,7 +1,7 @@
 // Service Worker — Tutor Eléctrico VanGast
 // Build 002: cache-first para uso 100% sin conexión una vez instalada.
 
-const CACHE_NAME = 'vangast-tutor-v3';
+const CACHE_NAME = 'vangast-tutor-v4';
 const ASSETS = [
   './index.html',
   './manifest.json',
