@@ -262,6 +262,41 @@ table.tbl th{ color:var(--muted); text-transform:uppercase; font-size:10px; lett
 .progress-track{ height:10px; background:var(--bg-grid); border-radius:999px; overflow:hidden; margin-top:8px; border:1px solid var(--border);}
 .progress-fill{ height:100%; background:linear-gradient(90deg, var(--accent), #6366f1); transition:width .4s ease; }
 .row-between{ display:flex; justify-content:space-between; align-items:center; }
+
+/* ---------- SEGMENTED TOOL SWITCHER ---------- */
+.seg-tools{ display:flex; gap:6px; background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:5px; margin-bottom:14px; }
+.seg-btn{ flex:1; background:none; border:none; color:var(--muted); font-weight:700; font-size:11.5px; padding:9px 4px; border-radius:8px; cursor:pointer; }
+.seg-btn.active{ background:var(--accent); color:#031018; }
+
+/* ---------- CÓDIGO DE COLORES (resistor) ---------- */
+.resistor-visual{ display:flex; justify-content:center; padding:10px 0 16px; }
+.resistor-visual svg{ width:100%; max-width:280px; }
+select.rsel{
+  width:100%; padding:11px 12px; background:var(--bg-grid); border:2px solid var(--border);
+  color:var(--text); border-radius:10px; font-size:14px; font-weight:600; font-family:'Inter',sans-serif;
+}
+
+/* ---------- TEMA CLARO ---------- */
+body.light-theme{
+  --bg:#eef1f6;
+  --bg-grid:#ffffff;
+  --card:#ffffff;
+  --card2:#eef2f8;
+  --border:#d7deea;
+  --text:#131b28;
+  --muted:#667085;
+  --shadow: 0 10px 24px -12px rgba(20,30,50,.18);
+}
+body.light-theme .bolt{ filter: drop-shadow(0 0 18px rgba(34,211,238,.35)); }
+body.light-theme header.top{ background:rgba(238,241,246,.9); }
+body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
+.theme-switch-row{ display:flex; align-items:center; justify-content:space-between; }
+.switch{ position:relative; width:46px; height:26px; flex-shrink:0; }
+.switch input{ opacity:0; width:0; height:0; }
+.switch .slider{ position:absolute; inset:0; background:var(--border); border-radius:999px; cursor:pointer; transition:.2s; }
+.switch .slider::before{ content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; }
+.switch input:checked + .slider{ background:var(--accent); }
+.switch input:checked + .slider::before{ transform:translateX(20px); }
 </style>
 </head>
 <body>
@@ -272,7 +307,7 @@ table.tbl th{ color:var(--muted); text-transform:uppercase; font-size:10px; lett
     <div class="bolt">⚡</div>
     <div class="brand">VanGast · Tutor Eléctrico</div>
     <div class="tagline">Aprende · Calcula · Comprende</div>
-    <div class="ver mono">v1.0.0-beta · Build 002</div>
+    <div class="ver mono">v1.0.0-beta · Build 004</div>
     <button class="btn-start" onclick="startApp()">COMENZAR</button>
   </div>
 
@@ -286,34 +321,116 @@ table.tbl th{ color:var(--muted); text-transform:uppercase; font-size:10px; lett
     <!-- CALCULAR -->
     <section class="view active" id="view-calcular">
       <div id="toast"></div>
-      <div class="card">
-        <div class="section-title">¿Qué datos conoces? Elige 2</div>
-        <div class="picker" id="picker"></div>
 
-        <div class="fields" id="fields"></div>
-
-        <div class="controls">
-          <button class="btn btn-ghost" onclick="clearAll(true)">🗑️ Limpiar</button>
-          <button class="btn btn-ghost" onclick="copyResult()">📋 Copiar</button>
-        </div>
+      <div class="seg-tools" id="segTools">
+        <button class="seg-btn active" data-tool="ohm" onclick="switchTool('ohm')">⚡ Ley de Ohm</button>
+        <button class="seg-btn" data-tool="resistor" onclick="switchTool('resistor')">🎨 Colores</button>
+        <button class="seg-btn" data-tool="vdrop" onclick="switchTool('vdrop')">🔌 Caída V</button>
       </div>
 
-      <div id="analyzing" class="mono">Analizando datos…</div>
-
-      <div class="card" id="wireCard" style="display:none;">
-        <div class="wire-box">
-          <svg viewBox="0 0 300 46" preserveAspectRatio="none">
-            <path id="wirePath" class="wire-path" d="M10,23 L290,23" />
-          </svg>
-        </div>
-      </div>
-
-      <div id="resultsCard" style="display:none;">
+      <!-- HERRAMIENTA: LEY DE OHM -->
+      <div id="tool-ohm" class="tool-panel">
         <div class="card">
-          <div class="section-title">Procedimiento</div>
-          <div class="timeline" id="timeline"></div>
+          <div class="section-title">¿Qué datos conoces? Elige 2</div>
+          <div class="picker" id="picker"></div>
+
+          <div class="fields" id="fields"></div>
+
+          <div class="controls">
+            <button class="btn btn-ghost" onclick="clearAll(true)">🗑️ Limpiar</button>
+            <button class="btn btn-ghost" onclick="copyResult()">📋 Copiar</button>
+          </div>
+        </div>
+
+        <div id="analyzing" class="mono">Analizando datos…</div>
+
+        <div class="card" id="wireCard" style="display:none;">
+          <div class="wire-box">
+            <svg viewBox="0 0 300 46" preserveAspectRatio="none">
+              <path id="wirePath" class="wire-path" d="M10,23 L290,23" />
+            </svg>
+          </div>
+        </div>
+
+        <div id="resultsCard" style="display:none;">
+          <div class="card">
+            <div class="section-title">Procedimiento</div>
+            <div class="timeline" id="timeline"></div>
+          </div>
         </div>
       </div>
+
+      <!-- HERRAMIENTA: CÓDIGO DE COLORES -->
+      <div id="tool-resistor" class="tool-panel" style="display:none;">
+        <div class="card">
+          <div class="section-title">Calculadora visual de bandas</div>
+          <div class="resistor-visual">
+            <svg id="resistorSvg" viewBox="0 0 220 60">
+              <line x1="0" y1="30" x2="40" y2="30" stroke="#9ca3af" stroke-width="4"/>
+              <line x1="180" y1="30" x2="220" y2="30" stroke="#9ca3af" stroke-width="4"/>
+              <rect x="40" y="8" width="140" height="44" rx="10" fill="#e7c489"/>
+              <rect id="band0" x="62" y="8" width="12" height="44" fill="#1a1a1a"/>
+              <rect id="band1" x="86" y="8" width="12" height="44" fill="#1a1a1a"/>
+              <rect id="band2" x="110" y="8" width="12" height="44" fill="#1a1a1a"/>
+              <rect id="band3" x="150" y="8" width="12" height="44" fill="#ca8a04"/>
+            </svg>
+          </div>
+          <div class="fields">
+            <div class="field"><label>Banda 1 (1ª cifra)</label>
+              <select id="rBand0" class="rsel" onchange="calcResistor()"></select>
+            </div>
+            <div class="field"><label>Banda 2 (2ª cifra)</label>
+              <select id="rBand1" class="rsel" onchange="calcResistor()"></select>
+            </div>
+            <div class="field"><label>Banda 3 (multiplicador)</label>
+              <select id="rBand2" class="rsel" onchange="calcResistor()"></select>
+            </div>
+            <div class="field"><label>Banda 4 (tolerancia)</label>
+              <select id="rBand3" class="rsel" onchange="calcResistor()"></select>
+            </div>
+          </div>
+        </div>
+        <div class="card" id="resistorResult" style="display:none;">
+          <div class="section-title">Resultado</div>
+          <div class="proc-answer" id="resistorValue" style="color:var(--r);"></div>
+          <div class="tl-text mono" id="resistorRange"></div>
+          <div class="didactic" id="resistorExplain"></div>
+        </div>
+      </div>
+
+      <!-- HERRAMIENTA: CAÍDA DE TENSIÓN -->
+      <div id="tool-vdrop" class="tool-panel" style="display:none;">
+        <div class="card">
+          <div class="section-title">Caída de tensión en cables</div>
+          <div class="fields">
+            <div class="field"><label style="color:var(--i)">Corriente</label>
+              <input type="number" step="any" min="0" placeholder="Ej. 15" id="vd-current" oninput="calcVDrop()"><span class="unit">A</span>
+            </div>
+            <div class="field"><label style="color:var(--accent)">Longitud del cable (una vía)</label>
+              <input type="number" step="any" min="0" placeholder="Ej. 30" id="vd-length" oninput="calcVDrop()"><span class="unit">m</span>
+            </div>
+            <div class="field"><label style="color:var(--v)">Voltaje del sistema</label>
+              <input type="number" step="any" min="0" placeholder="Ej. 120" id="vd-voltage" oninput="calcVDrop()"><span class="unit">V</span>
+            </div>
+            <div class="field"><label>Calibre del cable (AWG)</label>
+              <select id="vd-gauge" onchange="calcVDrop()"></select>
+            </div>
+            <div class="field"><label>Tipo de sistema</label>
+              <select id="vd-phase" onchange="calcVDrop()">
+                <option value="2">Monofásico (ida y vuelta)</option>
+                <option value="1.732">Trifásico</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="card" id="vdropResult" style="display:none;">
+          <div class="section-title">Resultado</div>
+          <div class="proc-answer" id="vdropValue" style="color:var(--accent);"></div>
+          <div class="tl-text mono" id="vdropPercent"></div>
+          <div class="didactic" id="vdropExplain"></div>
+        </div>
+      </div>
+
     </section>
 
     <!-- APRENDER -->
@@ -474,6 +591,13 @@ table.tbl th{ color:var(--muted); text-transform:uppercase; font-size:10px; lett
         <div class="progress-track"><div class="progress-fill" id="progressFill2" style="width:0%;"></div></div>
       </div>
       <div class="card">
+        <div class="theme-switch-row">
+          <div><div class="section-title" style="margin-bottom:2px;">Tema claro</div>
+          <small style="color:var(--muted); font-size:11px;">Cambia la apariencia oscura por una clara</small></div>
+          <label class="switch"><input type="checkbox" id="themeToggle" onchange="toggleTheme()"><span class="slider"></span></label>
+        </div>
+      </div>
+      <div class="card">
         <div class="section-title">Guardar y restaurar tus datos</div>
         <p style="font-size:12px; color:var(--muted); line-height:1.6; margin-bottom:12px;">
           La app no usa almacenamiento del navegador. Descarga tu historial, nivel y progreso como archivo, y cárgalo cuando quieras continuar.
@@ -489,7 +613,7 @@ table.tbl th{ color:var(--muted); text-transform:uppercase; font-size:10px; lett
         <p style="font-size:12px; color:var(--muted); line-height:1.6;">
           Tutor Eléctrico VanGast nace del Proyecto Faraday: una herramienta educativa para estudiantes y docentes de electricidad, sin conexión a internet, con explicaciones que se adaptan a tu nivel. Ley de Ohm, Ley de Watt y procedimiento paso a paso en un solo lugar.
         </p>
-        <p style="font-size:11px; color:var(--muted); margin-top:10px;">Build 002 · Motor matemático, biblioteca, historial y modo sin conexión.</p>
+        <p style="font-size:11px; color:var(--muted); margin-top:10px;">Build 004 · Código de colores de resistencias, caída de tensión en cables y tema claro.</p>
       </div>
     </section>
 
@@ -512,6 +636,7 @@ table.tbl th{ color:var(--muted); text-transform:uppercase; font-size:10px; lett
 const State = {
   level: 'intermediate',
   decimals: 2,
+  theme: 'dark',
   history: [],
   lessonsRead: { V:false, I:false, R:false, P:false },
   selected: [],
@@ -557,6 +682,19 @@ function switchView(name){
   document.querySelectorAll('nav.bottom button').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
 }
 
+function switchTool(name){
+  ['ohm','resistor','vdrop'].forEach(t=>{
+    document.getElementById('tool-'+t).style.display = (t===name) ? 'block' : 'none';
+  });
+  document.querySelectorAll('#segTools .seg-btn').forEach(b=>b.classList.toggle('active', b.dataset.tool===name));
+}
+
+function toggleTheme(){
+  const on = document.getElementById('themeToggle').checked;
+  State.theme = on ? 'light' : 'dark';
+  document.body.classList.toggle('light-theme', on);
+}
+
 function setLevel(lvl){
   State.level = lvl;
   ['beginner','intermediate','advanced'].forEach(l=>{
@@ -567,6 +705,8 @@ function setLevel(lvl){
   document.getElementById('lvlPill').textContent = labels[lvl];
   renderLessons();
   if(State.lastCalc) runCalculation(State.lastCalc, false);
+  if(document.getElementById('resistorResult').style.display === 'block') calcResistor();
+  if(document.getElementById('vdropResult').style.display === 'block') calcVDrop();
 }
 
 function changeDecimals(delta){
@@ -791,6 +931,128 @@ function copyResult(){
 }
 
 /* =====================================================
+   CÓDIGO DE COLORES DE RESISTENCIAS
+===================================================== */
+const RCOLORS = [
+  { key:'black',  name:'Negro',   hex:'#1a1a1a', digit:0, mult:1 },
+  { key:'brown',  name:'Marrón',  hex:'#92400e', digit:1, mult:10, tol:1 },
+  { key:'red',    name:'Rojo',    hex:'#dc2626', digit:2, mult:100, tol:2 },
+  { key:'orange', name:'Naranja', hex:'#f97316', digit:3, mult:1000 },
+  { key:'yellow', name:'Amarillo',hex:'#facc15', digit:4, mult:10000 },
+  { key:'green',  name:'Verde',   hex:'#16a34a', digit:5, mult:100000, tol:0.5 },
+  { key:'blue',   name:'Azul',    hex:'#2563eb', digit:6, mult:1000000, tol:0.25 },
+  { key:'violet', name:'Violeta', hex:'#7c3aed', digit:7, mult:10000000, tol:0.1 },
+  { key:'gray',   name:'Gris',    hex:'#9ca3af', digit:8, mult:100000000 },
+  { key:'white',  name:'Blanco',  hex:'#f8fafc', digit:9, mult:1000000000 }
+];
+const RTOLERANCE = [
+  { key:'brown', name:'Marrón (±1%)', hex:'#92400e', tol:1 },
+  { key:'red',   name:'Rojo (±2%)',   hex:'#dc2626', tol:2 },
+  { key:'gold',  name:'Dorado (±5%)', hex:'#ca8a04', tol:5 },
+  { key:'silver',name:'Plateado (±10%)', hex:'#cbd5e1', tol:10 },
+  { key:'none',  name:'Ninguna (±20%)', hex:'#e7c489', tol:20 }
+];
+const RMULT_EXTRA = [
+  { key:'gold', name:'Dorado (×0.1)', hex:'#ca8a04', mult:0.1 },
+  { key:'silver', name:'Plateado (×0.01)', hex:'#cbd5e1', mult:0.01 }
+];
+
+function initResistorTool(){
+  const opt = (c,val) => `<option value="${val}" data-hex="${c.hex}">${c.name}</option>`;
+  const digitOpts = RCOLORS.map(c=>opt(c, c.digit)).join('');
+  document.getElementById('rBand0').innerHTML = digitOpts;
+  document.getElementById('rBand1').innerHTML = digitOpts;
+  document.getElementById('rBand2').innerHTML = RCOLORS.map(c=>opt(c,c.mult)).join('') + RMULT_EXTRA.map(c=>opt(c,c.mult)).join('');
+  document.getElementById('rBand3').innerHTML = RTOLERANCE.map(c=>`<option value="${c.tol}" data-hex="${c.hex}">${c.name}</option>`).join('');
+  document.getElementById('rBand2').value = '100';
+  document.getElementById('rBand3').value = '5';
+  calcResistor();
+}
+
+function calcResistor(){
+  const b0 = document.getElementById('rBand0');
+  const b1 = document.getElementById('rBand1');
+  const b2 = document.getElementById('rBand2');
+  const b3 = document.getElementById('rBand3');
+  const d0 = Number(b0.value), d1 = Number(b1.value);
+  const mult = Number(b2.value);
+  const tol = Number(b3.value);
+  const ohms = (d0*10 + d1) * mult;
+
+  document.getElementById('band0').setAttribute('fill', b0.selectedOptions[0].dataset.hex);
+  document.getElementById('band1').setAttribute('fill', b1.selectedOptions[0].dataset.hex);
+  document.getElementById('band2').setAttribute('fill', b2.selectedOptions[0].dataset.hex);
+  document.getElementById('band3').setAttribute('fill', b3.selectedOptions[0].dataset.hex);
+
+  const min = ohms * (1 - tol/100);
+  const max = ohms * (1 + tol/100);
+  document.getElementById('resistorResult').style.display = 'block';
+  document.getElementById('resistorValue').textContent = formatPrefixed(ohms, 'Ω');
+  document.getElementById('resistorRange').textContent =
+    `Rango real esperado: ${formatPrefixed(min,'Ω')} — ${formatPrefixed(max,'Ω')} (tolerancia ±${tol}%)`;
+  const introMap = { beginner:'En palabras simples: ', intermediate:'', advanced:'Desde un enfoque técnico: ' };
+  const textMap = {
+    beginner:'Las dos primeras bandas forman un número, la tercera indica por cuánto multiplicarlo, y la cuarta te dice qué tan preciso es ese valor.',
+    intermediate:'El valor nominal se obtiene combinando las dos primeras cifras y aplicando el multiplicador; la tolerancia define el margen de error de fabricación.',
+    advanced:'R = (10·d1 + d2) × multiplicador, con una tolerancia de fabricación que acota el valor real dentro del rango indicado.'
+  };
+  document.getElementById('resistorExplain').innerHTML = `💡 <b>Explicación:</b> ${introMap[State.level]}${textMap[State.level]}`;
+}
+
+/* =====================================================
+   CAÍDA DE TENSIÓN EN CABLES
+===================================================== */
+const AWG_TABLE = [
+  { gauge:'14 AWG', ohmsKm:8.286 },
+  { gauge:'12 AWG', ohmsKm:5.211 },
+  { gauge:'10 AWG', ohmsKm:3.277 },
+  { gauge:'8 AWG',  ohmsKm:2.061 },
+  { gauge:'6 AWG',  ohmsKm:1.296 },
+  { gauge:'4 AWG',  ohmsKm:0.815 },
+  { gauge:'2 AWG',  ohmsKm:0.513 },
+  { gauge:'1/0 AWG',ohmsKm:0.323 }
+];
+
+function initVDropTool(){
+  document.getElementById('vd-gauge').innerHTML = AWG_TABLE.map((g,i)=>`<option value="${i}">${g.gauge} (cobre, ${g.ohmsKm} Ω/km)</option>`).join('');
+}
+
+function calcVDrop(){
+  const i = Number(document.getElementById('vd-current').value);
+  const l = Number(document.getElementById('vd-length').value);
+  const v = Number(document.getElementById('vd-voltage').value);
+  const gaugeIdx = Number(document.getElementById('vd-gauge').value);
+  const phaseFactor = Number(document.getElementById('vd-phase').value);
+  const box = document.getElementById('vdropResult');
+
+  if(!i || !l || !v){ box.style.display='none'; return; }
+
+  const ohmsKm = AWG_TABLE[gaugeIdx].ohmsKm;
+  const vDrop = phaseFactor * i * (l/1000) * ohmsKm;
+  const pct = (vDrop / v) * 100;
+
+  box.style.display = 'block';
+  document.getElementById('vdropValue').textContent = `${smartRound(vDrop)} V de caída`;
+  document.getElementById('vdropPercent').textContent = `Equivale al ${smartRound(pct)}% del voltaje del sistema (${v} V)`;
+
+  let warning = '';
+  if(pct > 5){
+    warning = '⚠️ Esta caída es alta. Como referencia educativa habitual (no una norma oficial), muchas instalaciones buscan mantenerse por debajo del 3–5%. Considera un calibre más grueso o un cable más corto.';
+  } else if(pct > 3){
+    warning = '🔶 Esta caída está en un rango límite. Como referencia educativa, conviene revisar si el calibre es el adecuado para ese largo de cable.';
+  } else {
+    warning = '✅ Esta caída está dentro de un rango educativo razonable para la mayoría de instalaciones.';
+  }
+  const introMap = { beginner:'En palabras simples: ', intermediate:'', advanced:'Desde un enfoque técnico: ' };
+  const textMap = {
+    beginner:'Mientras más largo es el cable o más corriente pasa por él, más "energía" se pierde en el camino en forma de calor, y eso se nota como una bajada de voltaje al final del cable.',
+    intermediate:'La resistencia propia del conductor, multiplicada por la corriente y la distancia recorrida, produce una pérdida de tensión entre el origen y el destino.',
+    advanced:'ΔV = k·I·L·Rkm, donde k=2 para monofásico (ida y vuelta) o √3 para trifásico, calculado con la resistividad del cobre por kilómetro según el calibre AWG.'
+  };
+  document.getElementById('vdropExplain').innerHTML = `💡 <b>Explicación:</b> ${introMap[State.level]}${textMap[State.level]}<br><br>${warning}`;
+}
+
+/* =====================================================
    HISTORIAL (en memoria)
 ===================================================== */
 function saveHistory(data, result, outKeys){
@@ -882,10 +1144,11 @@ function showTri(key){
 function exportData(){
   const payload = {
     app: 'VanGast Tutor Eléctrico',
-    build: '002',
+    build: '004',
     exportedAt: new Date().toISOString(),
     level: State.level,
     decimals: State.decimals,
+    theme: State.theme,
     lessonsRead: State.lessonsRead,
     history: State.history
   };
@@ -913,6 +1176,12 @@ function importData(event){
       if(data.lessonsRead) State.lessonsRead = data.lessonsRead;
       if(Array.isArray(data.history)) State.history = data.history;
       document.getElementById('decVal').textContent = State.decimals;
+      if(data.theme){
+        const isLight = data.theme === 'light';
+        document.getElementById('themeToggle').checked = isLight;
+        State.theme = data.theme;
+        document.body.classList.toggle('light-theme', isLight);
+      }
       setLevel(State.level);
       renderHistory();
       updateProgress();
@@ -934,6 +1203,8 @@ function init(){
   renderLessons();
   renderHistory();
   updateProgress();
+  initResistorTool();
+  initVDropTool();
   setLevel('intermediate');
 }
 init();
