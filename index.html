@@ -322,7 +322,7 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
     <div class="bolt">⚡</div>
     <div class="brand">VanGast · Tutor Eléctrico</div>
     <div class="tagline">Aprende · Calcula · Comprende</div>
-    <div class="ver mono">v1.0.0-beta · Build 007</div>
+    <div class="ver mono">v1.0.0-beta · Build 008</div>
     <button class="btn-start" onclick="startApp()">COMENZAR</button>
   </div>
 
@@ -713,7 +713,7 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
         <p style="font-size:12px; color:var(--muted); line-height:1.6;">
           Tutor Eléctrico VanGast nace del Proyecto Faraday: una herramienta educativa para estudiantes y docentes de electricidad, sin conexión a internet, con explicaciones que se adaptan a tu nivel. Ley de Ohm, Ley de Watt y procedimiento paso a paso en un solo lugar.
         </p>
-        <p style="font-size:11px; color:var(--muted); margin-top:10px;">Build 007 · Diseñador de planos eléctricos: habitaciones, ubicación automática de tomas/luces/switches y balanceo de cargas con calibre AWG y breaker sugerido.</p>
+        <p style="font-size:11px; color:var(--muted); margin-top:10px;">Build 008 · Presupuesto estimado: materiales, cable calculado geométricamente (contador→mufa→tablero→cajas→puntos), depreciación de herramientas y mano de obra.</p>
       </div>
     </section>
 
@@ -770,6 +770,45 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
         <div class="section-title">⚡ Balanceo de cargas</div>
         <div id="planoBalanceList"></div>
         <div class="didactic" id="planoBalanceNote"></div>
+      </div>
+
+      <div class="card" id="planoBudgetCard" style="display:none;">
+        <div class="section-title">💰 Presupuesto estimado</div>
+
+        <details class="lib-cat" open>
+          <summary>🏷️ Precios unitarios (edítalos según tu zona)</summary>
+          <div class="body">
+            <div class="fields">
+              <div class="field"><label>Etiqueta de moneda</label><input type="text" id="bud-currency" value="$" oninput="renderBudget()"></div>
+              <div class="field"><label>Toma corriente (c/u)</label><input type="number" min="0" step="any" id="bud-toma" value="0" oninput="renderBudget()"></div>
+              <div class="field"><label>Apagador / switch (c/u)</label><input type="number" min="0" step="any" id="bud-switch" value="0" oninput="renderBudget()"></div>
+              <div class="field"><label>Luminaria / foco (c/u)</label><input type="number" min="0" step="any" id="bud-luz" value="0" oninput="renderBudget()"></div>
+              <div class="field"><label>Caja de registro (c/u)</label><input type="number" min="0" step="any" id="bud-caja" value="0" oninput="renderBudget()"></div>
+              <div class="field"><label>Breaker 15A (c/u)</label><input type="number" min="0" step="any" id="bud-brk15" value="0" oninput="renderBudget()"></div>
+              <div class="field"><label>Breaker 20A (c/u)</label><input type="number" min="0" step="any" id="bud-brk20" value="0" oninput="renderBudget()"></div>
+              <div class="field"><label>Tablero (pieza)</label><input type="number" min="0" step="any" id="bud-tablero" value="0" oninput="renderBudget()"></div>
+              <div class="field"><label>Mufa (pieza)</label><input type="number" min="0" step="any" id="bud-mufa" value="0" oninput="renderBudget()"></div>
+              <div class="field"><label>Cable de circuitos (por metro)</label><input type="number" min="0" step="any" id="bud-cable-circ" value="0" oninput="renderBudget()"></div>
+              <div class="field"><label>Cable de acometida (por metro)</label><input type="number" min="0" step="any" id="bud-cable-acom" value="0" oninput="renderBudget()"></div>
+            </div>
+          </div>
+        </details>
+
+        <details class="lib-cat">
+          <summary>📏 Distancias y negocio</summary>
+          <div class="body">
+            <div class="fields">
+              <div class="field"><label>Contador → Mufa</label><input type="number" min="0" step="any" id="bud-d-contador" value="2" oninput="renderBudget()"><span class="unit">m</span></div>
+              <div class="field"><label>Mufa → Tablero</label><input type="number" min="0" step="any" id="bud-d-mufa" value="3" oninput="renderBudget()"><span class="unit">m</span></div>
+              <div class="field"><label>Caída vertical por punto</label><input type="number" min="0" step="any" id="bud-d-caida" value="1.2" oninput="renderBudget()"><span class="unit">m</span></div>
+              <div class="field"><label>Depreciación de herramientas</label><input type="number" min="0" step="any" id="bud-herramientas" value="0" oninput="renderBudget()"></div>
+              <div class="field"><label>Mano de obra sobre costos y gastos</label><input type="number" min="0" step="any" id="bud-mano-obra" value="40" oninput="renderBudget()"><span class="unit">%</span></div>
+            </div>
+          </div>
+        </details>
+
+        <div id="planoBudgetBreakdown" style="margin-top:14px;"></div>
+        <div class="didactic" id="planoBudgetNote"></div>
       </div>
     </section>
 
@@ -869,6 +908,7 @@ function setLevel(lvl){
   if(document.getElementById('acResult').style.display === 'block') calcAC();
   updateLab();
   if(State.plano.rooms.length) renderLoadBalance();
+  if(State.plano.rooms.length) renderBudget();
 }
 
 function changeDecimals(delta){
@@ -1447,6 +1487,7 @@ function renderPlano(){
   document.getElementById('planoRoomsCard').style.display = hasRooms ? 'block':'none';
   document.getElementById('planoVisualCard').style.display = hasRooms ? 'block':'none';
   document.getElementById('planoBalanceCard').style.display = hasRooms ? 'block':'none';
+  document.getElementById('planoBudgetCard').style.display = hasRooms ? 'block':'none';
   document.getElementById('planoRoomCount').textContent = rooms.length;
 
   document.getElementById('planoRoomsList').innerHTML = rooms.map(r=>{
@@ -1470,6 +1511,7 @@ function renderPlano(){
 
   renderFloorPlan();
   renderLoadBalance();
+  renderBudget();
 }
 
 function computeRoomLayout(rooms){
@@ -1597,6 +1639,135 @@ function renderLoadBalance(){
   document.getElementById('planoBalanceNote').innerHTML = `💡 <b>Cómo se calculó:</b> ${introMap[lvl]}${textMap[lvl]}<br><br>⚠️ Esto es una referencia educativa simplificada, no un cálculo certificado. Antes de instalar, verifica con un electricista con licencia y el código eléctrico de tu localidad.`;
 }
 
+/* =====================================================
+   ESTIMADO DE CABLE (geométrico) Y PRESUPUESTO
+===================================================== */
+function computeCableEstimate(){
+  const rooms = State.plano.rooms;
+  if(!rooms.length) return { tableroCajas:0, cajasPuntos:0 };
+  const { positioned } = computeRoomLayout(rooms);
+  const tableroPoint = { x: positioned[0].x, y: positioned[0].y };
+  const verticalDrop = Number(document.getElementById('bud-d-caida').value) || 0;
+
+  let tableroCajas = 0, cajasPuntos = 0;
+
+  positioned.forEach(r=>{
+    // Tramo tablero -> caja de registro de la habitación (distancia tipo conducto, no diagonal)
+    tableroCajas += Math.abs(r.x - tableroPoint.x) + Math.abs(r.y - tableroPoint.y);
+
+    // Puntos a cablear dentro de la habitación: tomas + luces + switches
+    const points = distributePerimeterPoints(r.w, r.l, r.outlets);
+    for(let i=0;i<r.lights;i++) points.push({ x:r.w*((i+1)/(r.lights+1)), y:r.l/2 });
+    for(let i=0;i<r.switches;i++) points.push({ x:0.3+i*0.3, y:r.l-0.3 });
+
+    // Cadena punto a punto (vecino más cercano) empezando en la esquina de entrada
+    let current = { x:0, y:0 };
+    const remaining = [...points];
+    let chain = 0;
+    while(remaining.length){
+      let bestIdx = 0, bestDist = Infinity;
+      remaining.forEach((p,idx)=>{
+        const d = Math.abs(p.x-current.x) + Math.abs(p.y-current.y);
+        if(d < bestDist){ bestDist = d; bestIdx = idx; }
+      });
+      chain += bestDist;
+      current = remaining[bestIdx];
+      remaining.splice(bestIdx,1);
+    }
+    chain += points.length * verticalDrop;
+    cajasPuntos += chain;
+  });
+
+  return { tableroCajas, cajasPuntos };
+}
+
+function renderBudget(){
+  const rooms = State.plano.rooms;
+  const breakdown = document.getElementById('planoBudgetBreakdown');
+  const noteBox = document.getElementById('planoBudgetNote');
+  if(!rooms.length){ breakdown.innerHTML=''; noteBox.innerHTML=''; return; }
+
+  const cur = document.getElementById('bud-currency').value || '$';
+  const priceToma = Number(document.getElementById('bud-toma').value) || 0;
+  const priceSwitch = Number(document.getElementById('bud-switch').value) || 0;
+  const priceLuz = Number(document.getElementById('bud-luz').value) || 0;
+  const priceCaja = Number(document.getElementById('bud-caja').value) || 0;
+  const priceBrk15 = Number(document.getElementById('bud-brk15').value) || 0;
+  const priceBrk20 = Number(document.getElementById('bud-brk20').value) || 0;
+  const priceTablero = Number(document.getElementById('bud-tablero').value) || 0;
+  const priceMufa = Number(document.getElementById('bud-mufa').value) || 0;
+  const priceCableCirc = Number(document.getElementById('bud-cable-circ').value) || 0;
+  const priceCableAcom = Number(document.getElementById('bud-cable-acom').value) || 0;
+  const dContador = Number(document.getElementById('bud-d-contador').value) || 0;
+  const dMufa = Number(document.getElementById('bud-d-mufa').value) || 0;
+  const herramientas = Number(document.getElementById('bud-herramientas').value) || 0;
+  const manoObraPct = Number(document.getElementById('bud-mano-obra').value) || 0;
+
+  const totalTomas = rooms.reduce((s,r)=>s+r.outlets,0);
+  const totalSwitches = rooms.reduce((s,r)=>s+r.switches,0);
+  const totalLuces = rooms.reduce((s,r)=>s+r.lights,0);
+  const totalCajas = rooms.length;
+  const circuits = computeLoadBalance();
+  const brk15count = circuits.filter(c=>c.breaker===15).length;
+  const brk20count = circuits.filter(c=>c.breaker===20).length;
+
+  const { tableroCajas, cajasPuntos } = computeCableEstimate();
+  const metrosCircuitosCrudo = tableroCajas + cajasPuntos;
+  const metrosAcometidaCrudo = dContador + dMufa;
+  const metrosCircuitos = metrosCircuitosCrudo * 1.05;
+  const metrosAcometida = metrosAcometidaCrudo * 1.05;
+
+  const items = [
+    ['Tomas de corriente', totalTomas, priceToma],
+    ['Apagadores / switches', totalSwitches, priceSwitch],
+    ['Luminarias / focos', totalLuces, priceLuz],
+    ['Cajas de registro', totalCajas, priceCaja],
+    ['Breakers 15A', brk15count, priceBrk15],
+    ['Breakers 20A', brk20count, priceBrk20],
+    ['Tablero', 1, priceTablero],
+    ['Mufa', 1, priceMufa],
+  ];
+  const materialesTotal = items.reduce((s,[,qty,price])=>s+qty*price,0);
+
+  const costoCableCirc = metrosCircuitos * priceCableCirc;
+  const costoCableAcom = metrosAcometida * priceCableAcom;
+  const cableTotal = costoCableCirc + costoCableAcom;
+
+  const subtotal = materialesTotal + cableTotal + herramientas;
+  const manoObra = subtotal * (manoObraPct/100);
+  const total = subtotal + manoObra;
+
+  const row = (label, qtyText, subtotalVal) => `<div class="hist-item" style="margin-bottom:6px; padding:10px 12px;">
+    <div class="hist-top"><span>${label}</span><span>${cur}${subtotalVal.toFixed(2)}</span></div>
+    <div style="font-size:11px; color:var(--muted);">${qtyText}</div>
+  </div>`;
+
+  let html = `<div class="section-title" style="margin-top:4px;">Materiales</div>`;
+  html += items.map(([label,qty,price])=> row(label, `${qty} × ${cur}${price.toFixed(2)}`, qty*price)).join('');
+  html += `<div class="section-title" style="margin-top:14px;">Cable (incluye 5% de excedente)</div>`;
+  html += row('Cable de circuitos', `${metrosCircuitos.toFixed(1)} m × ${cur}${priceCableCirc.toFixed(2)}`, costoCableCirc);
+  html += row('Cable de acometida', `${metrosAcometida.toFixed(1)} m × ${cur}${priceCableAcom.toFixed(2)}`, costoCableAcom);
+  html += `<div class="section-title" style="margin-top:14px;">Resumen</div>`;
+  html += row('Materiales + cable', '', materialesTotal + cableTotal);
+  html += row('Depreciación de herramientas', '', herramientas);
+  html += row(`Mano de obra (${manoObraPct}% sobre costos y gastos)`, '', manoObra);
+  html += `<div class="hist-item" style="border:2px solid var(--accent); margin-top:8px;">
+    <div class="hist-top"><span style="color:var(--accent); font-weight:800;">TOTAL PRESUPUESTO</span></div>
+    <div class="proc-answer" style="color:var(--accent);">${cur}${total.toFixed(2)}</div>
+  </div>`;
+
+  breakdown.innerHTML = html;
+
+  const introMap = { beginner:'En palabras simples: ', intermediate:'', advanced:'Desde un enfoque técnico: ' };
+  const lvl = State.level;
+  const textMap = {
+    beginner:'El cable se calcula siguiendo la ruta real: del contador a la mufa, de la mufa al tablero, y del tablero a cada habitación y de ahí a cada toma o foco, sumando un 5% extra por si acaso. La mano de obra se calcula como un porcentaje de todo lo demás.',
+    intermediate:'La distancia de cable usa una ruta tipo conducto (horizontal + vertical, no diagonal) desde el tablero hasta la caja de cada habitación, y de ahí una cadena punto a punto hacia cada toma, luminaria y switch, con caída vertical incluida por punto.',
+    advanced:'La longitud de cable se estima con distancia Manhattan (aproximando el tendido por conducto/pared) y un recorrido tipo vecino-más-cercano dentro de cada habitación; es una heurística educativa, no un ruteo real de instalación.'
+  };
+  noteBox.innerHTML = `💡 <b>Cómo se calculó:</b> ${introMap[lvl]}${textMap[lvl]}<br><br>⚠️ Esto es una estimación educativa. Los precios, distancias y porcentajes son los que tú ingresaste — verifica cantidades reales y cotiza con proveedores locales antes de comprometerte con un presupuesto formal.`;
+}
+
 
 function saveHistory(data, result, outKeys){
   const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -1684,57 +1855,29 @@ function showTri(key){
 /* =====================================================
    EXPORTAR / IMPORTAR DATOS (sin localStorage)
 ===================================================== */
+const BUDGET_FIELD_IDS = ['bud-currency','bud-toma','bud-switch','bud-luz','bud-caja','bud-brk15','bud-brk20','bud-tablero','bud-mufa','bud-cable-circ','bud-cable-acom','bud-d-contador','bud-d-mufa','bud-d-caida','bud-herramientas','bud-mano-obra'];
+
 function exportData(){
+  const budget = {};
+  BUDGET_FIELD_IDS.forEach(id=>{ const el = document.getElementById(id); if(el) budget[id] = el.value; });
   const payload = {
     app: 'VanGast Tutor Eléctrico',
-    build: '007',
+    build: '008',
     exportedAt: new Date().toISOString(),
     level: State.level,
     decimals: State.decimals,
     theme: State.theme,
     lessonsRead: State.lessonsRead,
     history: State.history,
-    plano: State.plano
+    plano: State.plano,
+    budget: budget
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = `vangast-datos-${new Date().toISOString().slice(0,10)}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-  showToast('Datos exportados.', true);
-}
-
-function importData(event){
-  const file = event.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try{
-      const data = JSON.parse(reader.result);
-      if(data.level) State.level = data.level;
-      if(typeof data.decimals === 'number') State.decimals = data.decimals;
-      if(data.lessonsRead) State.lessonsRead = data.lessonsRead;
-      if(Array.isArray(data.history)) State.history = data.history;
-      if(data.plano && Array.isArray(data.plano.rooms)) State.plano = data.plano;
-      document.getElementById('decVal').textContent = State.decimals;
-      if(data.theme){
-        const isLight = data.theme === 'light';
-        document.getElementById('themeToggle').checked = isLight;
-        State.theme = data.theme;
-        document.body.classList.toggle('light-theme', isLight);
-      }
-      setLevel(State.level);
-      renderHistory();
-      updateProgress();
-      renderPlano();
-      showToast('Datos importados correctamente.', true);
-    }catch(err){
-      showToast('El archivo no es válido.');
-    }
+   }
   };
   reader.readAsText(file);
   event.target.value = '';
