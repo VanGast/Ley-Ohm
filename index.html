@@ -129,10 +129,10 @@ nav.bottom{
 }
 nav.bottom button{
   flex:1; background:none; border:none; color:var(--muted);
-  display:flex; flex-direction:column; align-items:center; gap:3px;
-  padding:10px 2px 8px; cursor:pointer; font-size:10.5px; font-weight:600;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  padding:9px 1px 7px; cursor:pointer; font-size:9.3px; font-weight:600;
 }
-nav.bottom button .ic{ font-size:19px; }
+nav.bottom button .ic{ font-size:17px; }
 nav.bottom button.active{ color:var(--accent); }
 nav.bottom button.active .ic{ transform:translateY(-1px); filter: drop-shadow(0 0 8px rgba(34,211,238,.6)); }
 
@@ -303,6 +303,15 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
 .switch .slider::before{ content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; }
 .switch input:checked + .slider{ background:var(--accent); }
 .switch input:checked + .slider::before{ transform:translateX(20px); }
+
+/* ---------- PLANO ELÉCTRICO ---------- */
+.plano-room{ background:var(--card2); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:10px; }
+.plano-room-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.plano-room-actions{ display:flex; gap:4px; flex-shrink:0; }
+.plano-room-actions button{ width:26px; height:26px; border-radius:6px; border:1px solid var(--border); background:var(--bg-grid); color:var(--text); cursor:pointer; font-size:12px; }
+.plano-steppers{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.plano-stepper{ display:flex; align-items:center; gap:6px; background:var(--bg-grid); border:1px solid var(--border); border-radius:8px; padding:4px 8px; font-size:12px; }
+.plano-stepper button{ width:20px; height:20px; border-radius:5px; border:none; background:var(--card2); color:var(--text); font-weight:800; cursor:pointer; font-size:12px; line-height:1; }
 </style>
 </head>
 <body>
@@ -313,7 +322,7 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
     <div class="bolt">⚡</div>
     <div class="brand">VanGast · Tutor Eléctrico</div>
     <div class="tagline">Aprende · Calcula · Comprende</div>
-    <div class="ver mono">v1.0.0-beta · Build 006</div>
+    <div class="ver mono">v1.0.0-beta · Build 007</div>
     <button class="btn-start" onclick="startApp()">COMENZAR</button>
   </div>
 
@@ -704,7 +713,63 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
         <p style="font-size:12px; color:var(--muted); line-height:1.6;">
           Tutor Eléctrico VanGast nace del Proyecto Faraday: una herramienta educativa para estudiantes y docentes de electricidad, sin conexión a internet, con explicaciones que se adaptan a tu nivel. Ley de Ohm, Ley de Watt y procedimiento paso a paso en un solo lugar.
         </p>
-        <p style="font-size:11px; color:var(--muted); margin-top:10px;">Build 006 · Laboratorio virtual: simulación interactiva de un circuito de batería y foco.</p>
+        <p style="font-size:11px; color:var(--muted); margin-top:10px;">Build 007 · Diseñador de planos eléctricos: habitaciones, ubicación automática de tomas/luces/switches y balanceo de cargas con calibre AWG y breaker sugerido.</p>
+      </div>
+    </section>
+
+    <!-- PLANO ELÉCTRICO -->
+    <section class="view" id="view-plano">
+      <div class="card">
+        <div class="section-title">Agregar habitación</div>
+        <div class="fields">
+          <div class="field">
+            <label>Nombre</label>
+            <select id="planoRoomPreset" onchange="onRoomPresetChange()">
+              <option value="Sala">Sala</option>
+              <option value="Comedor">Comedor</option>
+              <option value="Cocina">Cocina</option>
+              <option value="Recámara">Recámara</option>
+              <option value="Baño">Baño</option>
+              <option value="Pasillo">Pasillo</option>
+              <option value="Otro">Otro (personalizado)</option>
+            </select>
+          </div>
+          <div class="field" id="planoCustomNameField" style="display:none;">
+            <label>Nombre personalizado</label>
+            <input type="text" id="planoCustomName" placeholder="Ej. Estudio">
+          </div>
+          <div class="field">
+            <label style="color:var(--accent)">Ancho</label>
+            <input type="number" step="any" min="0.5" id="planoW" placeholder="Ej. 3.5"><span class="unit">m</span>
+          </div>
+          <div class="field">
+            <label style="color:var(--accent)">Largo</label>
+            <input type="number" step="any" min="0.5" id="planoL" placeholder="Ej. 4"><span class="unit">m</span>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn btn-primary" onclick="addRoom()">➕ Agregar habitación</button>
+        </div>
+      </div>
+
+      <div class="card" id="planoRoomsCard" style="display:none;">
+        <div class="section-title">Habitaciones (<span id="planoRoomCount">0</span>)</div>
+        <div id="planoRoomsList"></div>
+        <div class="controls">
+          <button class="btn btn-ghost" onclick="clearPlano()">🗑️ Limpiar plano completo</button>
+        </div>
+      </div>
+
+      <div class="card" id="planoVisualCard" style="display:none;">
+        <div class="section-title">Plano visual</div>
+        <svg id="planoSvg" viewBox="0 0 300 300" style="width:100%; display:block; background:var(--bg-grid); border-radius:10px;"></svg>
+        <p style="font-size:11px; color:var(--muted); margin-top:8px;">🟡 Luz &nbsp; 🟩 Toma &nbsp; 🔵 Switch — distribución automática simplificada e ilustrativa; usa las flechas ↑↓ para reordenar habitaciones.</p>
+      </div>
+
+      <div class="card" id="planoBalanceCard" style="display:none;">
+        <div class="section-title">⚡ Balanceo de cargas</div>
+        <div id="planoBalanceList"></div>
+        <div class="didactic" id="planoBalanceNote"></div>
       </div>
     </section>
 
@@ -714,6 +779,7 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
     <button class="active" data-view="calcular" onclick="switchView('calcular')"><span class="ic">🧮</span>Calcular</button>
     <button data-view="aprender" onclick="switchView('aprender')"><span class="ic">🎓</span>Aprender</button>
     <button data-view="biblioteca" onclick="switchView('biblioteca')"><span class="ic">📘</span>Biblioteca</button>
+    <button data-view="plano" onclick="switchView('plano')"><span class="ic">📐</span>Plano</button>
     <button data-view="historial" onclick="switchView('historial')"><span class="ic">📝</span>Historial</button>
     <button data-view="ajustes" onclick="switchView('ajustes')"><span class="ic">⚙</span>Ajustes</button>
   </nav>
@@ -731,8 +797,10 @@ const State = {
   history: [],
   lessonsRead: { V:false, I:false, R:false, P:false },
   selected: [],
-  values: {}
+  values: {},
+  plano: { rooms: [] }
 };
+let planoIdCounter = 1;
 
 const VARS = {
   V: { name:'Voltaje', unit:'V', color:'var(--v)', full:'Voltaje / Tensión' },
@@ -800,6 +868,7 @@ function setLevel(lvl){
   if(document.getElementById('vdropResult').style.display === 'block') calcVDrop();
   if(document.getElementById('acResult').style.display === 'block') calcAC();
   updateLab();
+  if(State.plano.rooms.length) renderLoadBalance();
 }
 
 function changeDecimals(delta){
@@ -1314,6 +1383,220 @@ function updateLab(){
   document.getElementById('labCaption').innerHTML = `💡 <b>Qué está pasando:</b> ${introMap[State.level]}${textMap[State.level]}`;
 }
 
+/* =====================================================
+   DISEÑADOR DE PLANOS ELÉCTRICOS
+===================================================== */
+function onRoomPresetChange(){
+  const val = document.getElementById('planoRoomPreset').value;
+  document.getElementById('planoCustomNameField').style.display = (val === 'Otro') ? 'block' : 'none';
+}
+
+function addRoom(){
+  const preset = document.getElementById('planoRoomPreset').value;
+  const customName = document.getElementById('planoCustomName').value.trim();
+  const name = (preset === 'Otro' && customName) ? customName : preset;
+  const w = Number(document.getElementById('planoW').value);
+  const l = Number(document.getElementById('planoL').value);
+  if(!w || !l){ showToast('Ingresa ancho y largo de la habitación.'); return; }
+
+  const area = w*l;
+  const isKitchen = /cocina/i.test(name);
+  const lights = Math.max(1, Math.ceil(area/15));
+  const perimeter = 2*(w+l);
+  let outlets = Math.max(2, Math.ceil(perimeter/3.5));
+  if(isKitchen) outlets += 2;
+
+  State.plano.rooms.push({ id:'r'+(planoIdCounter++), name, w, l, lights, outlets, switches:1 });
+  document.getElementById('planoCustomName').value = '';
+  document.getElementById('planoW').value = '';
+  document.getElementById('planoL').value = '';
+  renderPlano();
+  showToast(`${name} agregada al plano.`, true);
+}
+
+function removeRoom(id){
+  State.plano.rooms = State.plano.rooms.filter(r=>r.id!==id);
+  renderPlano();
+}
+
+function moveRoom(id, dir){
+  const arr = State.plano.rooms;
+  const idx = arr.findIndex(r=>r.id===id);
+  const newIdx = idx+dir;
+  if(newIdx<0 || newIdx>=arr.length) return;
+  [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+  renderPlano();
+}
+
+function adjustRoom(id, field, delta){
+  const room = State.plano.rooms.find(r=>r.id===id);
+  if(!room) return;
+  room[field] = Math.max(1, room[field]+delta);
+  renderPlano();
+}
+
+function clearPlano(){
+  State.plano.rooms = [];
+  renderPlano();
+  showToast('Plano reiniciado.', true);
+}
+
+function renderPlano(){
+  const rooms = State.plano.rooms;
+  const hasRooms = rooms.length > 0;
+  document.getElementById('planoRoomsCard').style.display = hasRooms ? 'block':'none';
+  document.getElementById('planoVisualCard').style.display = hasRooms ? 'block':'none';
+  document.getElementById('planoBalanceCard').style.display = hasRooms ? 'block':'none';
+  document.getElementById('planoRoomCount').textContent = rooms.length;
+
+  document.getElementById('planoRoomsList').innerHTML = rooms.map(r=>{
+    const area = (r.w*r.l).toFixed(1);
+    return `<div class="plano-room">
+      <div class="plano-room-head">
+        <div><b>${r.name}</b><br><span class="mono" style="font-size:11px;color:var(--muted);">${r.w}m × ${r.l}m · ${area}m²</span></div>
+        <div class="plano-room-actions">
+          <button onclick="moveRoom('${r.id}',-1)">↑</button>
+          <button onclick="moveRoom('${r.id}',1)">↓</button>
+          <button onclick="removeRoom('${r.id}')">🗑️</button>
+        </div>
+      </div>
+      <div class="plano-steppers">
+        <div class="plano-stepper">💡<button onclick="adjustRoom('${r.id}','lights',-1)">−</button><b>${r.lights}</b><button onclick="adjustRoom('${r.id}','lights',1)">+</button></div>
+        <div class="plano-stepper">🔌<button onclick="adjustRoom('${r.id}','outlets',-1)">−</button><b>${r.outlets}</b><button onclick="adjustRoom('${r.id}','outlets',1)">+</button></div>
+        <div class="plano-stepper">🔘<button onclick="adjustRoom('${r.id}','switches',-1)">−</button><b>${r.switches}</b><button onclick="adjustRoom('${r.id}','switches',1)">+</button></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  renderFloorPlan();
+  renderLoadBalance();
+}
+
+function computeRoomLayout(rooms){
+  const maxRowWidth = 9; // metros: ancho máximo de fila antes de pasar a la siguiente
+  const rows = [];
+  let currentRow = [], currentWidth = 0;
+  rooms.forEach(r=>{
+    if(currentRow.length && currentWidth + r.w > maxRowWidth){
+      rows.push(currentRow);
+      currentRow = [];
+      currentWidth = 0;
+    }
+    currentRow.push(r);
+    currentWidth += r.w;
+  });
+  if(currentRow.length) rows.push(currentRow);
+
+  let y = 0;
+  const positioned = [];
+  rows.forEach(row=>{
+    let x = 0;
+    const rowHeight = Math.max(...row.map(r=>r.l));
+    row.forEach(r=>{
+      positioned.push({ ...r, x, y });
+      x += r.w;
+    });
+    y += rowHeight;
+  });
+  const totalWidth = Math.max(...rows.map(row=>row.reduce((s,r)=>s+r.w,0)));
+  return { positioned, totalWidth, totalHeight:y };
+}
+
+function distributePerimeterPoints(w, l, count){
+  const perim = 2*(w+l);
+  const points = [];
+  for(let i=0;i<count;i++){
+    let d = (perim * (i+0.5)) / count;
+    if(d < w) points.push({x:d, y:0});
+    else if(d < w+l) points.push({x:w, y:d-w});
+    else if(d < 2*w+l) points.push({x:w-(d-(w+l)), y:l});
+    else points.push({x:0, y:l-(d-(2*w+l))});
+  }
+  return points;
+}
+
+function renderFloorPlan(){
+  const { positioned, totalWidth, totalHeight } = computeRoomLayout(State.plano.rooms);
+  const svg = document.getElementById('planoSvg');
+  const pad = 1, scale = 26;
+  const vw = (totalWidth+pad*2)*scale, vh = (totalHeight+pad*2)*scale;
+  svg.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
+
+  let out = '';
+  positioned.forEach(r=>{
+    const rx = (r.x+pad)*scale, ry = (r.y+pad)*scale, rw = r.w*scale, rl = r.l*scale;
+    out += `<rect x="${rx}" y="${ry}" width="${rw}" height="${rl}" fill="var(--card2)" stroke="#4b5568" stroke-width="2"/>`;
+    out += `<text x="${rx+rw/2}" y="${ry+16}" font-size="11" fill="#8b97ac" text-anchor="middle" font-weight="700">${r.name}</text>`;
+    out += `<text x="${rx+rw/2}" y="${ry+29}" font-size="9" fill="#8b97ac" text-anchor="middle">${r.w}×${r.l}m</text>`;
+
+    for(let i=0;i<r.lights;i++){
+      const lx = rx + rw*((i+1)/(r.lights+1));
+      const ly = ry + rl/2 + 14;
+      out += `<circle cx="${lx}" cy="${ly}" r="5.5" fill="#fbbf24" stroke="#92400e" stroke-width="1"/>`;
+    }
+    distributePerimeterPoints(r.w, r.l, r.outlets).forEach(p=>{
+      out += `<rect x="${rx+p.x*scale-3.5}" y="${ry+p.y*scale-3.5}" width="7" height="7" fill="#3ddc84"/>`;
+    });
+    for(let i=0;i<r.switches;i++){
+      out += `<circle cx="${rx+12+i*14}" cy="${ry+rl-12}" r="5" fill="#5b9dff"/>`;
+    }
+  });
+  svg.innerHTML = out;
+}
+
+function planoBinPack(items, maxVA){
+  const circuits = [];
+  items.forEach(item=>{
+    let placed = false;
+    for(const c of circuits){
+      if(c.va + item.va <= maxVA){ c.va += item.va; c.rooms.push(item.room); placed = true; break; }
+    }
+    if(!placed) circuits.push({ va:item.va, rooms:[item.room] });
+  });
+  return circuits;
+}
+
+function computeLoadBalance(){
+  const lightingItems = [], outletItems = [], kitchenItems = [];
+  State.plano.rooms.forEach(r=>{
+    const isKitchen = /cocina/i.test(r.name);
+    lightingItems.push({ room:r.name, va:r.lights*100 });
+    if(isKitchen) kitchenItems.push({ room:r.name, va:r.outlets*180 });
+    else outletItems.push({ room:r.name, va:r.outlets*180 });
+  });
+
+  const LIGHT_MAX = 1440, OUTLET_MAX = 1440, KITCHEN_MAX = 1920;
+  const lightingCircuits = planoBinPack(lightingItems, LIGHT_MAX).map(c=>({...c, type:'Iluminación', breaker:15, gauge:'14 AWG', max:LIGHT_MAX}));
+  const outletCircuits = planoBinPack(outletItems, OUTLET_MAX).map(c=>({...c, type:'Tomas generales', breaker:15, gauge:'14 AWG', max:OUTLET_MAX}));
+  const kitchenCircuits = planoBinPack(kitchenItems, KITCHEN_MAX).map(c=>({...c, type:'Tomas de cocina (dedicado)', breaker:20, gauge:'12 AWG', max:KITCHEN_MAX}));
+
+  return [...lightingCircuits, ...outletCircuits, ...kitchenCircuits];
+}
+
+function renderLoadBalance(){
+  const circuits = computeLoadBalance();
+  const list = document.getElementById('planoBalanceList');
+  list.innerHTML = circuits.map((c,i)=>{
+    const pct = Math.round((c.va/c.max)*100);
+    const color = pct>90 ? 'var(--danger)' : pct>70 ? 'var(--warn)' : 'var(--ok)';
+    return `<div class="hist-item">
+      <div class="hist-top"><span>Circuito ${i+1} · ${c.type}</span><span>${c.breaker}A · ${c.gauge}</span></div>
+      <div class="hist-eq">${c.rooms.join(', ')}</div>
+      <div class="progress-track" style="margin-top:6px;"><div class="progress-fill" style="width:${Math.min(100,pct)}%; background:${color};"></div></div>
+      <div style="font-size:11px; color:var(--muted); margin-top:4px;">${Math.round(c.va)} VA de ${c.max} VA (${pct}%)</div>
+    </div>`;
+  }).join('');
+
+  const introMap = { beginner:'En palabras simples: ', intermediate:'', advanced:'Desde un enfoque técnico: ' };
+  const lvl = State.level;
+  const textMap = {
+    beginner:'Cada circuito es como un canal separado de electricidad; si conectamos demasiados aparatos al mismo canal, el interruptor (breaker) se bota por seguridad. Por eso repartimos las luces y las tomas entre varios circuitos.',
+    intermediate:'Se usan valores educativos de referencia (100 VA por punto de luz, 180 VA por toma) y se agrupan sin superar el 80% de la capacidad del breaker, la práctica recomendada para cargas continuas.',
+    advanced:'Empaquetado tipo first-fit respetando el 80% de la ampacidad del breaker. La cocina recibe circuito(s) dedicado(s) de 20A, análogo al concepto de circuito de pequeños electrodomésticos.'
+  };
+  document.getElementById('planoBalanceNote').innerHTML = `💡 <b>Cómo se calculó:</b> ${introMap[lvl]}${textMap[lvl]}<br><br>⚠️ Esto es una referencia educativa simplificada, no un cálculo certificado. Antes de instalar, verifica con un electricista con licencia y el código eléctrico de tu localidad.`;
+}
+
 
 function saveHistory(data, result, outKeys){
   const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -1404,13 +1687,14 @@ function showTri(key){
 function exportData(){
   const payload = {
     app: 'VanGast Tutor Eléctrico',
-    build: '004',
+    build: '007',
     exportedAt: new Date().toISOString(),
     level: State.level,
     decimals: State.decimals,
     theme: State.theme,
     lessonsRead: State.lessonsRead,
-    history: State.history
+    history: State.history,
+    plano: State.plano
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -1435,6 +1719,7 @@ function importData(event){
       if(typeof data.decimals === 'number') State.decimals = data.decimals;
       if(data.lessonsRead) State.lessonsRead = data.lessonsRead;
       if(Array.isArray(data.history)) State.history = data.history;
+      if(data.plano && Array.isArray(data.plano.rooms)) State.plano = data.plano;
       document.getElementById('decVal').textContent = State.decimals;
       if(data.theme){
         const isLight = data.theme === 'light';
@@ -1445,6 +1730,7 @@ function importData(event){
       setLevel(State.level);
       renderHistory();
       updateProgress();
+      renderPlano();
       showToast('Datos importados correctamente.', true);
     }catch(err){
       showToast('El archivo no es válido.');
@@ -1465,6 +1751,7 @@ function init(){
   updateProgress();
   initResistorTool();
   initVDropTool();
+  renderPlano();
   setLevel('intermediate');
 }
 init();
