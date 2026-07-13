@@ -312,8 +312,9 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
 .plano-steppers{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
 .plano-stepper{ display:flex; align-items:center; gap:6px; background:var(--bg-grid); border:1px solid var(--border); border-radius:8px; padding:4px 8px; font-size:12px; }
 .plano-stepper button{ width:20px; height:20px; border-radius:5px; border:none; background:var(--card2); color:var(--text); font-weight:800; cursor:pointer; font-size:12px; line-height:1; }
-.plano-newrow-chip{ background:var(--bg-grid); border:1px solid var(--border); color:var(--muted); border-radius:8px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; }
-.plano-newrow-chip.active{ background:rgba(34,211,238,.12); border-color:var(--accent); color:var(--accent); }
+.plano-layout-modes{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border); }
+.plano-mode-chip{ background:var(--bg-grid); border:1px solid var(--border); color:var(--muted); border-radius:8px; padding:5px 9px; font-size:10.5px; font-weight:700; cursor:pointer; }
+.plano-mode-chip.active{ background:rgba(34,211,238,.12); border-color:var(--accent); color:var(--accent); }
 </style>
 </head>
 <body>
@@ -324,7 +325,7 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
     <div class="bolt">⚡</div>
     <div class="brand">VanGast · Tutor Eléctrico</div>
     <div class="tagline">Aprende · Calcula · Comprende</div>
-    <div class="ver mono">v1.0.0-beta · Build 009</div>
+    <div class="ver mono">v1.0.0-beta · Build 010</div>
     <button class="btn-start" onclick="startApp()">COMENZAR</button>
   </div>
 
@@ -715,7 +716,7 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
         <p style="font-size:12px; color:var(--muted); line-height:1.6;">
           Tutor Eléctrico VanGast nace del Proyecto Faraday: una herramienta educativa para estudiantes y docentes de electricidad, sin conexión a internet, con explicaciones que se adaptan a tu nivel. Ley de Ohm, Ley de Watt y procedimiento paso a paso en un solo lugar.
         </p>
-        <p style="font-size:11px; color:var(--muted); margin-top:10px;">Build 009 · Control total del orden del plano ("↵ Nueva fila" por habitación) y ubicación elegible del tablero eléctrico.</p>
+        <p style="font-size:11px; color:var(--muted); margin-top:10px;">Build 010 · Plano con control real de posición (al lado / debajo / nueva fila) y cable estimado con subidas y bajadas reales por tipo de punto.</p>
       </div>
     </section>
 
@@ -756,7 +757,7 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
 
       <div class="card" id="planoRoomsCard" style="display:none;">
         <div class="section-title">Habitaciones (<span id="planoRoomCount">0</span>)</div>
-        <p style="font-size:11px; color:var(--muted); margin:-4px 0 10px;">↑ ↓ cambia el orden de las habitaciones. "↵ Nueva fila" hace que esa habitación empiece una fila nueva en el plano (por ejemplo, para separar un pasillo o poner el patio aparte).</p>
+        <p style="font-size:11px; color:var(--muted); margin:-4px 0 10px;">↑ ↓ cambia el orden. "Posición" decide cómo se acomoda cada habitación respecto a la anterior: → al lado, ↓ debajo (misma columna), o ⏎ nueva fila completa.</p>
         <div id="planoRoomsList"></div>
         <div class="controls">
           <button class="btn btn-ghost" onclick="clearPlano()">🗑️ Limpiar plano completo</button>
@@ -807,7 +808,10 @@ body.light-theme nav.bottom{ background:rgba(255,255,255,.95); }
             <div class="fields">
               <div class="field"><label>Contador → Mufa</label><input type="number" min="0" step="any" id="bud-d-contador" value="2" oninput="renderBudget()"><span class="unit">m</span></div>
               <div class="field"><label>Mufa → Tablero</label><input type="number" min="0" step="any" id="bud-d-mufa" value="3" oninput="renderBudget()"><span class="unit">m</span></div>
-              <div class="field"><label>Caída vertical por punto</label><input type="number" min="0" step="any" id="bud-d-caida" value="1.2" oninput="renderBudget()"><span class="unit">m</span></div>
+              <div class="field"><label>Caída de caja a toma</label><input type="number" min="0" step="any" id="bud-d-caida-toma" value="2.1" oninput="renderBudget()"><span class="unit">m</span></div>
+              <div class="field"><label>Caída de caja a switch</label><input type="number" min="0" step="any" id="bud-d-caida-switch" value="1.2" oninput="renderBudget()"><span class="unit">m</span></div>
+              <div class="field"><label>Caída de caja a luminaria</label><input type="number" min="0" step="any" id="bud-d-caida-luz" value="0.3" oninput="renderBudget()"><span class="unit">m</span></div>
+              <div class="field"><label>Subida tablero → caja de registro</label><input type="number" min="0" step="any" id="bud-d-subida" value="0.9" oninput="renderBudget()"><span class="unit">m</span></div>
               <div class="field"><label>Depreciación de herramientas</label><input type="number" min="0" step="any" id="bud-herramientas" value="0" oninput="renderBudget()"></div>
               <div class="field"><label>Mano de obra sobre costos y gastos</label><input type="number" min="0" step="any" id="bud-mano-obra" value="40" oninput="renderBudget()"><span class="unit">%</span></div>
             </div>
@@ -1453,8 +1457,7 @@ function addRoom(){
   let outlets = Math.max(2, Math.ceil(perimeter/3.5));
   if(isKitchen) outlets += 2;
 
-  const newRow = State.plano.rooms.length === 0 ? true : false;
-  State.plano.rooms.push({ id:'r'+(planoIdCounter++), name, w, l, lights, outlets, switches:1, newRow });
+  State.plano.rooms.push({ id:'r'+(planoIdCounter++), name, w, l, lights, outlets, switches:1, layoutMode:'right' });
   document.getElementById('planoCustomName').value = '';
   document.getElementById('planoW').value = '';
   document.getElementById('planoL').value = '';
@@ -1476,10 +1479,10 @@ function moveRoom(id, dir){
   renderPlano();
 }
 
-function toggleRoomRow(id){
+function setRoomLayoutMode(id, mode){
   const room = State.plano.rooms.find(r=>r.id===id);
   if(!room) return;
-  room.newRow = !room.newRow;
+  room.layoutMode = mode;
   renderPlano();
 }
 
@@ -1520,8 +1523,13 @@ function renderPlano(){
         <div class="plano-stepper">💡<button onclick="adjustRoom('${r.id}','lights',-1)">−</button><b>${r.lights}</b><button onclick="adjustRoom('${r.id}','lights',1)">+</button></div>
         <div class="plano-stepper">🔌<button onclick="adjustRoom('${r.id}','outlets',-1)">−</button><b>${r.outlets}</b><button onclick="adjustRoom('${r.id}','outlets',1)">+</button></div>
         <div class="plano-stepper">🔘<button onclick="adjustRoom('${r.id}','switches',-1)">−</button><b>${r.switches}</b><button onclick="adjustRoom('${r.id}','switches',1)">+</button></div>
-        ${idx>0 ? `<button class="plano-newrow-chip ${r.newRow?'active':''}" onclick="toggleRoomRow('${r.id}')">↵ Nueva fila${r.newRow?' ✓':''}</button>` : ''}
       </div>
+      ${idx>0 ? `<div class="plano-layout-modes">
+        <span style="font-size:10.5px; color:var(--muted); margin-right:2px;">Posición:</span>
+        <button class="plano-mode-chip ${r.layoutMode==='right'?'active':''}" onclick="setRoomLayoutMode('${r.id}','right')">→ Al lado</button>
+        <button class="plano-mode-chip ${r.layoutMode==='below'?'active':''}" onclick="setRoomLayoutMode('${r.id}','below')">↓ Debajo</button>
+        <button class="plano-mode-chip ${r.layoutMode==='newrow'?'active':''}" onclick="setRoomLayoutMode('${r.id}','newrow')">⏎ Nueva fila</button>
+      </div>` : ''}
     </div>`;
   }).join('');
 
@@ -1537,31 +1545,40 @@ function renderPlano(){
 }
 
 function computeRoomLayout(rooms){
-  const rows = [];
-  let currentRow = [];
-  rooms.forEach(r=>{
-    const forceBreak = r.newRow && currentRow.length > 0;
-    if(forceBreak){
-      rows.push(currentRow);
-      currentRow = [];
-    }
-    currentRow.push(r);
-  });
-  if(currentRow.length) rows.push(currentRow);
-
-  let y = 0;
   const positioned = [];
-  rows.forEach(row=>{
-    let x = 0;
-    const rowHeight = Math.max(...row.map(r=>r.l));
-    row.forEach(r=>{
-      positioned.push({ ...r, x, y });
-      x += r.w;
-    });
-    y += rowHeight;
+  if(!rooms.length) return { positioned, totalWidth:0, totalHeight:0 };
+
+  let colX = 0, colWidth = 0, colBottom = 0;
+  let rowStartY = 0, rowMaxBottom = 0;
+  let totalWidth = 0;
+
+  rooms.forEach((r, idx)=>{
+    let x, y;
+    if(idx === 0){
+      x = 0; y = 0;
+      colX = 0; colWidth = r.w; colBottom = r.l;
+      rowStartY = 0; rowMaxBottom = r.l;
+    } else if(r.layoutMode === 'below'){
+      x = colX; y = colBottom;
+      colBottom += r.l;
+      colWidth = Math.max(colWidth, r.w);
+      rowMaxBottom = Math.max(rowMaxBottom, colBottom);
+    } else if(r.layoutMode === 'newrow'){
+      colX = 0; y = rowMaxBottom; x = 0;
+      colWidth = r.w; colBottom = y + r.l;
+      rowStartY = y; rowMaxBottom = colBottom;
+    } else { // 'right' (default)
+      colX = colX + colWidth;
+      x = colX; y = rowStartY;
+      colWidth = r.w; colBottom = y + r.l;
+      rowMaxBottom = Math.max(rowMaxBottom, colBottom);
+    }
+    positioned.push({ ...r, x, y });
+    totalWidth = Math.max(totalWidth, x + r.w);
   });
-  const totalWidth = rows.length ? Math.max(...rows.map(row=>row.reduce((s,r)=>s+r.w,0))) : 0;
-  return { positioned, totalWidth, totalHeight:y };
+
+  const totalHeight = Math.max(...positioned.map(r=>r.y + r.l));
+  return { positioned, totalWidth, totalHeight };
 }
 
 function distributePerimeterPoints(w, l, count){
@@ -1680,20 +1697,29 @@ function computeCableEstimate(){
   if(!rooms.length) return { tableroCajas:0, cajasPuntos:0 };
   const { positioned } = computeRoomLayout(rooms);
   const tableroPoint = getTableroPoint(positioned);
-  const verticalDrop = Number(document.getElementById('bud-d-caida').value) || 0;
+  const dropToma = Number(document.getElementById('bud-d-caida-toma').value) || 0;
+  const dropSwitch = Number(document.getElementById('bud-d-caida-switch').value) || 0;
+  const dropLuz = Number(document.getElementById('bud-d-caida-luz').value) || 0;
+  const subidaTablero = Number(document.getElementById('bud-d-subida').value) || 0;
 
   let tableroCajas = 0, cajasPuntos = 0;
 
   positioned.forEach(r=>{
-    // Tramo tablero -> caja de registro de la habitación (distancia tipo conducto, no diagonal)
-    tableroCajas += Math.abs(r.x - tableroPoint.x) + Math.abs(r.y - tableroPoint.y);
+    // Tramo tablero -> caja de registro de la habitación: recorrido horizontal tipo conducto
+    // más la subida del tablero hasta la altura de la caja de registro (normalmente cerca del techo).
+    const horizontal = Math.abs(r.x - tableroPoint.x) + Math.abs(r.y - tableroPoint.y);
+    tableroCajas += horizontal + subidaTablero;
 
-    // Puntos a cablear dentro de la habitación: tomas + luces + switches
-    const points = distributePerimeterPoints(r.w, r.l, r.outlets);
-    for(let i=0;i<r.lights;i++) points.push({ x:r.w*((i+1)/(r.lights+1)), y:r.l/2 });
-    for(let i=0;i<r.switches;i++) points.push({ x:0.3+i*0.3, y:r.l-0.3 });
+    // Puntos a cablear dentro de la habitación: tomas + luces + switches, cada uno con su propia
+    // caída vertical desde la caja de registro (el cable no viaja en línea recta: primero recorre
+    // el techo/pared en horizontal y luego baja hasta la altura del punto final).
+    const points = [];
+    distributePerimeterPoints(r.w, r.l, r.outlets).forEach(p=>points.push({ ...p, drop:dropToma }));
+    for(let i=0;i<r.lights;i++) points.push({ x:r.w*((i+1)/(r.lights+1)), y:r.l/2, drop:dropLuz });
+    for(let i=0;i<r.switches;i++) points.push({ x:0.3+i*0.3, y:r.l-0.3, drop:dropSwitch });
 
-    // Cadena punto a punto (vecino más cercano) empezando en la esquina de entrada
+    // Cadena punto a punto (vecino más cercano) empezando en la esquina de entrada,
+    // usando solo el tramo horizontal para decidir el orden del recorrido.
     let current = { x:0, y:0 };
     const remaining = [...points];
     let chain = 0;
@@ -1703,11 +1729,10 @@ function computeCableEstimate(){
         const d = Math.abs(p.x-current.x) + Math.abs(p.y-current.y);
         if(d < bestDist){ bestDist = d; bestIdx = idx; }
       });
-      chain += bestDist;
+      chain += bestDist + remaining[bestIdx].drop;
       current = remaining[bestIdx];
       remaining.splice(bestIdx,1);
     }
-    chain += points.length * verticalDrop;
     cajasPuntos += chain;
   });
 
@@ -1794,101 +1819,20 @@ function renderBudget(){
   const introMap = { beginner:'En palabras simples: ', intermediate:'', advanced:'Desde un enfoque técnico: ' };
   const lvl = State.level;
   const textMap = {
-    beginner:'El cable se calcula siguiendo la ruta real: del contador a la mufa, de la mufa al tablero, y del tablero a cada habitación y de ahí a cada toma o foco, sumando un 5% extra por si acaso. La mano de obra se calcula como un porcentaje de todo lo demás.',
-    intermediate:'La distancia de cable usa una ruta tipo conducto (horizontal + vertical, no diagonal) desde el tablero hasta la caja de cada habitación, y de ahí una cadena punto a punto hacia cada toma, luminaria y switch, con caída vertical incluida por punto.',
-    advanced:'La longitud de cable se estima con distancia Manhattan (aproximando el tendido por conducto/pared) y un recorrido tipo vecino-más-cercano dentro de cada habitación; es una heurística educativa, no un ruteo real de instalación.'
+    beginner:'El cable no va en línea recta: sube del tablero a la caja de registro, recorre el techo o la pared en horizontal, y luego baja hasta cada toma, switch o foco (bajar hasta un contacto es más cable que bajar hasta un apagador o un foco). Todo esto se suma, más un 5% extra por si acaso.',
+    intermediate:'La distancia de cable combina el recorrido horizontal tipo conducto (tablero → caja de cada habitación → cada punto, en cadena) con la subida del tablero a la caja y la bajada real de cada punto: más cable para una toma (cerca del piso) que para un switch o una luminaria (cerca del techo).',
+    advanced:'Se usa distancia Manhattan para el tramo horizontal y un recorrido vecino-más-cercano dentro de cada habitación, sumando por separado la subida tablero→caja y la bajada específica de cada punto (toma/switch/luz), ya que cada una termina a una altura distinta. Es una heurística educativa, no un ruteo real de instalación.'
   };
   noteBox.innerHTML = `💡 <b>Cómo se calculó:</b> ${introMap[lvl]}${textMap[lvl]}<br><br>⚠️ Esto es una estimación educativa. Los precios, distancias y porcentajes son los que tú ingresaste — verifica cantidades reales y cotiza con proveedores locales antes de comprometerte con un presupuesto formal.`;
 }
 
 
-function saveHistory(data, result, outKeys){
-  const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  const inStr = Object.keys(data).map(k=>`${k}=${data[k]}${VARS[k].unit}`).join(', ');
-  const outStr = outKeys.map(k=>`${k}=${smartRound(result[k])}${VARS[k].unit}`).join(', ');
-  State.history.unshift({ id: Date.now(), time, inStr, outStr, data });
-  if(State.history.length > 20) State.history.pop();
-  renderHistory();
-}
-
-function renderHistory(){
-  const el = document.getElementById('historyList');
-  if(State.history.length === 0){
-    el.innerHTML = '<p class="empty">Aún no hay cálculos. Ve a la pestaña Calcular.</p>';
-    return;
-  }
-  el.innerHTML = State.history.map(item=>`
-    <div class="hist-item">
-      <div class="hist-top"><span>${item.time}</span><span>#${item.id.toString().slice(-4)}</span></div>
-      <div class="hist-eq">${item.inStr} → <b>${item.outStr}</b></div>
-      <div class="hist-actions">
-        <button onclick="reuseHistory(${item.id})">🔄 Repetir</button>
-        <button onclick="deleteHistory(${item.id})">🗑️ Eliminar</button>
-      </div>
-    </div>`).join('');
-}
-
-function reuseHistory(id){
-  const item = State.history.find(h=>h.id===id);
-  if(!item) return;
-  switchView('calcular');
-  State.selected = Object.keys(item.data);
-  renderPicker(); renderFields();
-  State.selected.forEach(k=>{ document.getElementById('in-'+k).value = item.data[k]; });
-  runCalculation(item.data, false);
-}
-function deleteHistory(id){
-  State.history = State.history.filter(h=>h.id!==id);
-  renderHistory();
-}
-
-/* =====================================================
-   APRENDER
-===================================================== */
-const LESSON_TIME = { V:'30 s', I:'35 s', R:'40 s', P:'35 s' };
-function renderLessons(){
-  const el = document.getElementById('lessons');
-  el.innerHTML = Object.keys(VARS).map(k=>`
-    <div class="lesson card" style="margin-bottom:10px; box-shadow:none;">
-      <div class="lesson-head">
-        <div style="display:flex; gap:10px; align-items:center;">
-          <div class="swatch" style="background:${VARS[k].color}; color:#08121c;">${k}</div>
-          <h3>¿Qué es ${VARS[k].full.toLowerCase()}?</h3>
-        </div>
-        <span class="time">${LESSON_TIME[k]}</span>
-      </div>
-      <p>${LEVEL_INTRO[State.level]}${VAR_INFO[k][State.level]}</p>
-      <label class="lesson-check">
-        <input type="checkbox" ${State.lessonsRead[k]?'checked':''} onchange="toggleLesson('${k}')">
-        Marcar como leída
-      </label>
-    </div>`).join('');
-}
-function toggleLesson(k){
-  State.lessonsRead[k] = !State.lessonsRead[k];
-  updateProgress();
-}
-function updateProgress(){
-  const total = Object.keys(State.lessonsRead).length;
-  const done = Object.values(State.lessonsRead).filter(Boolean).length;
-  const pct = Math.round((done/total)*100);
-  ['progressFill','progressFill2'].forEach(id=>document.getElementById(id).style.width = pct+'%');
-  ['progressLabel','progressLabel2'].forEach(id=>document.getElementById(id).textContent = pct+'%');
-}
-
-function showTri(key){
-  const info = VAR_INFO[key];
-  const box = document.getElementById('tri-info');
-  box.style.display = 'block';
-  box.style.borderLeftColor = VARS[key].color;
-  box.innerHTML = `<b style="color:${VARS[key].color}; font-size:14px;">${VARS[key].full}</b><br>
-    <b>Unidad:</b> ${info.unit}<br><br>${LEVEL_INTRO[State.level]}${info[State.level]}`;
 }
 
 /* =====================================================
    EXPORTAR / IMPORTAR DATOS (sin localStorage)
 ===================================================== */
-const BUDGET_FIELD_IDS = ['bud-currency','bud-toma','bud-switch','bud-luz','bud-caja','bud-brk15','bud-brk20','bud-tablero','bud-mufa','bud-cable-circ','bud-cable-acom','bud-d-contador','bud-d-mufa','bud-d-caida','bud-herramientas','bud-mano-obra'];
+const BUDGET_FIELD_IDS = ['bud-currency','bud-toma','bud-switch','bud-luz','bud-caja','bud-brk15','bud-brk20','bud-tablero','bud-mufa','bud-cable-circ','bud-cable-acom','bud-d-contador','bud-d-mufa','bud-d-caida-toma','bud-d-caida-switch','bud-d-caida-luz','bud-d-subida','bud-herramientas','bud-mano-obra'];
 
 function exportData(){
   const budget = {};
@@ -1928,7 +1872,12 @@ function importData(event){
       if(typeof data.decimals === 'number') State.decimals = data.decimals;
       if(data.lessonsRead) State.lessonsRead = data.lessonsRead;
       if(Array.isArray(data.history)) State.history = data.history;
-      if(data.plano && Array.isArray(data.plano.rooms)) State.plano = data.plano;
+      if(data.plano && Array.isArray(data.plano.rooms)){
+        State.plano = data.plano;
+        State.plano.rooms.forEach(r=>{
+          if(!r.layoutMode) r.layoutMode = r.newRow ? 'newrow' : 'right';
+        });
+      }
       if(data.budget){
         BUDGET_FIELD_IDS.forEach(id=>{
           if(data.budget[id] !== undefined){ const el = document.getElementById(id); if(el) el.value = data.budget[id]; }
